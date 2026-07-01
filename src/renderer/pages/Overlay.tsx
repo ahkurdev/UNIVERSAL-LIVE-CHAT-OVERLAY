@@ -104,11 +104,17 @@ export function Overlay() {
     });
 
     // Periodic cleanup of old messages (overlay only)
+    // Special events (superchat/gift/cheers) stay 3x longer
     const cleanup = setInterval(() => {
       setDisplayMessages((prev) => {
         if (prev.length <= (maxRef.current || 8)) return prev;
-        const cutoff = Date.now() - (fadeRef.current || 12) * 1000;
-        const filtered = prev.filter(m => m.timestamp > cutoff);
+        const now = Date.now();
+        const fadeMs = (fadeRef.current || 12) * 1000;
+        const filtered = prev.filter(m => {
+          const isSpecial = m.eventType && m.eventType !== 'chat';
+          const timeout = isSpecial ? fadeMs * 3 : fadeMs;
+          return m.timestamp > now - timeout;
+        });
         return filtered.length >= (maxRef.current || 8) ? filtered : prev;
       });
     }, 3000);
@@ -214,11 +220,16 @@ export function Overlay() {
                     'bg-[rgba(12,12,16,0.65)]'
                   }`}
                   style={{
-                    backdropFilter: 'blur(8px)',
-                    WebkitBackdropFilter: 'blur(8px)',
+                    backdropFilter: `blur(${currentSettings.messageBlur || 8}px)`,
+                    WebkitBackdropFilter: `blur(${currentSettings.messageBlur || 8}px)`,
                     borderLeftColor: msg.eventType === 'superchat' ? '#FFD700' :
                       msg.eventType === 'gift' ? '#FF69B4' :
                       msg.eventType === 'cheers' ? '#00BFFF' : meta.accentA,
+                    background: msg.eventType === 'superchat' ? `linear-gradient(to right, rgba(255,200,0,0.2), rgba(12,12,16,${(currentSettings.messageBgOpacity || 55)/100}))` :
+                      msg.eventType === 'gift' ? `linear-gradient(to right, rgba(255,0,150,0.2), rgba(12,12,16,${(currentSettings.messageBgOpacity || 55)/100}))` :
+                      msg.eventType === 'cheers' ? `linear-gradient(to right, rgba(0,150,255,0.2), rgba(12,12,16,${(currentSettings.messageBgOpacity || 55)/100}))` :
+                      `rgba(12,12,16,${(currentSettings.messageBgOpacity || 55)/100})`,
+                    borderRadius: `${currentSettings.messageRounding || 12}px`,
                     boxShadow: msg.eventType && msg.eventType !== 'chat'
                       ? `0 0 20px ${msg.eventType === 'superchat' ? 'rgba(255,215,0,0.3)' :
                           msg.eventType === 'gift' ? 'rgba(255,105,180,0.3)' :
@@ -226,6 +237,7 @@ export function Overlay() {
                       : '0 4px 20px rgba(0,0,0,0.4)',
                   }}
                   >
+                  {currentSettings.showAvatar !== false && (
                   <div className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold mt-0.5 overflow-hidden"
                     style={msg.avatar ? {} : {
                       background: `linear-gradient(135deg, ${meta.accentA}, ${meta.accentB})`,
@@ -238,8 +250,10 @@ export function Overlay() {
                       meta.icon
                     )}
                   </div>
+                  )}
                   <div className="flex flex-col min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
+                      {currentSettings.showPlatformTag !== false && (
                       <span
                         className="text-[10px] font-bold tracking-[0.5px] uppercase px-1.5 py-0.5 rounded-md"
                         style={{
@@ -249,6 +263,7 @@ export function Overlay() {
                       >
                         {meta.label}
                       </span>
+                      )}
                       {msg.eventType && msg.eventType !== 'chat' && (
                         <span className={`text-[10px] font-bold tracking-[0.5px] uppercase px-1.5 py-0.5 rounded-md ${
                           msg.eventType === 'superchat' ? 'bg-yellow-500/30 text-yellow-300' :
@@ -281,7 +296,7 @@ export function Overlay() {
                         </span>
                       )}
                     </div>
-                    <div className="text-[13.5px] text-[#EDEDF0] leading-snug mt-1 break-words">
+                    <div style={{ fontSize: `${currentSettings.fontSize || 13.5}px` }} className="text-[#EDEDF0] leading-snug mt-1 break-words">
                       {msg.message}
                       {/* TikTok gift details */}
                       {msg.platform === 'tiktok' && msg.extra?.giftName && (

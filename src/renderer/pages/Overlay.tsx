@@ -78,14 +78,14 @@ export function Overlay() {
 
     // Direct IPC listener (bypasses preload abstraction for reliability)
     // @ts-ignore
-    window.electron.ipcRenderer.on('messages-update', (_event: any, allMessages: ChatMessage[]) => {
+    window.electron.ipcRenderer.on('messages-update', (allMessages: ChatMessage[]) => {
       console.log('[Overlay] messages received:', allMessages?.length);
       if (!allMessages || allMessages.length === 0) return;
       setDisplayMessages(allMessages);
     });
 
     // @ts-ignore
-    window.electron.ipcRenderer.on('settings-update', (_event: any, newSettings: AppSettings) => {
+    window.electron.ipcRenderer.on('settings-update', (newSettings: AppSettings) => {
       useSettingsStore.setState((state) => ({
         settings: { ...state.settings, ...newSettings }
       }));

@@ -184,8 +184,7 @@ app.whenReady().then(() => {
   // Start OBS Browser Source server if enabled
   const settings = store.get('settings') as any;
   if (settings?.obsServerEnabled) {
-    const obsHtmlPath = join(__dirname, '../renderer/obs-overlay.html');
-    obsServerStart(settings?.obsServerPort || 3000, obsHtmlPath);
+    obsServerStart(settings?.obsServerPort || 3000, '');
   }
 
   obsServerSetStatusCb((status, url) => {
@@ -313,8 +312,8 @@ ipcMain.on('youtube-disconnect', () => {
 // --- OBS Browser Source IPC ---
 
 ipcMain.on('obs-server-start', (_event, serverPort: number) => {
-  const obsHtmlPath = join(__dirname, '../renderer/obs-overlay.html');
-  obsServerStart(serverPort || 3000, obsHtmlPath);
+  // Serve obs-overlay.html inline (embedded in server)
+  obsServerStart(serverPort || 3000, '');
 });
 
 ipcMain.on('obs-server-stop', () => {

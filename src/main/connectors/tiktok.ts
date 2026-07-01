@@ -122,7 +122,7 @@ function toChatMessage(data: any, eventName: string): ChatMessage | null {
     displayMessage = `Sent ${giftCount}x ${giftName || 'Gift'}` +
       (diamondCount > 0 ? ` (${diamondCount} 💎)` : '');
   } else if (eventName === 'member') {
-    displayMessage = `Joined as member! 🎉`;
+    displayMessage = `Joined the stream 👋`;
   } else if (eventName === 'like') {
     displayMessage = `Liked! ❤️ (x${data.likeCount || 1})`;
   } else if (eventName === 'follow') {

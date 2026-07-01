@@ -21,6 +21,7 @@ const store = new ElectronStore({
     settings: {
       language: 'en',
       youtubeApiKey: '',
+      savedChannels: {},
       isLocked: false,
       opacity: 100,
       scale: 1.0,

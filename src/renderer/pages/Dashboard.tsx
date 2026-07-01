@@ -75,7 +75,14 @@ export function Dashboard() {
   const [kickError, setKickError] = useState('');
 
   useEffect(() => {
-    init();
+    init().then(() => {
+      // Load saved channels after settings init
+      const saved = settings.savedChannels || {};
+      if (saved.twitch) setTwitchChannel(saved.twitch);
+      if (saved.youtube) setYoutubeChannel(saved.youtube);
+      if (saved.tiktok) setTiktokChannel(saved.tiktok);
+      if (saved.kick) setKickChannel(saved.kick);
+    });
 
     mockConnector.onConnected(() => setConnectionStatus('mock', 'connected'));
     mockConnector.onDisconnected(() => setConnectionStatus('mock', 'idle'));
@@ -132,7 +139,11 @@ export function Dashboard() {
       if (!twitchChannel.trim()) return;
       setConnectionStatus('twitch', 'connecting');
       setTwitchError('');
-      try { await twitchConnector.connect(twitchChannel.trim()); }
+      try {
+        await twitchConnector.connect(twitchChannel.trim());
+        // Save channel
+        setSetting('savedChannels', { ...settings.savedChannels, twitch: twitchChannel.trim() });
+      }
       catch (err: any) { setTwitchError(err.message || 'Connection failed'); }
     }
   }, [twitchStatus, twitchChannel]);

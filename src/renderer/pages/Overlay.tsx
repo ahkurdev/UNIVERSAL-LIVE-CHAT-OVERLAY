@@ -15,6 +15,7 @@ const PLATFORM_META: Record<string, { label: string; icon: string; accentA: stri
 const DEFAULT_SETTINGS: AppSettings = {
   language: 'en',
   youtubeApiKey: '',
+  savedChannels: {},
   isLocked: false,
   opacity: 100,
   scale: 1,
@@ -199,15 +200,18 @@ export function Overlay() {
                           'rgba(0,191,255,0.3)'}`
                       : '0 4px 20px rgba(0,0,0,0.4)',
                   }}
-                >
-                  <div
-                    className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold mt-0.5"
-                    style={{
+                  >
+                  <div className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold mt-0.5 overflow-hidden"
+                    style={msg.avatar ? {} : {
                       background: `linear-gradient(135deg, ${meta.accentA}, ${meta.accentB})`,
                       color: meta.darkText ? '#0c0c10' : '#fff',
                     }}
                   >
-                    {meta.icon}
+                    {msg.avatar ? (
+                      <img src={msg.avatar} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      meta.icon
+                    )}
                   </div>
                   <div className="flex flex-col min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">

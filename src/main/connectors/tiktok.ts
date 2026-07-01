@@ -40,27 +40,14 @@ export async function tiktokConnect(username: string): Promise<void> {
     connection.on('disconnected', () => onDisconnectedCb?.());
     connection.on('error', (err: any) => onErrorCb?.(err instanceof Error ? err : new Error(String(err))));
 
-    // Register all events
-    const events = [
-      'chat', 'gift', 'member', 'like', 'social', 'envelope',
-      'questionNew', 'follow', 'share', 'roomUser', 'emote',
-      'goalUpdate', 'subNotify', 'superFan', 'superFanJoin',
-      'liveIntro', 'linkMicBattle', 'linkMicArmies',
-      'streamEnd', 'roomMessage', 'captionMessage', 'pollMessage',
-      'rankUpdate', 'rankText', 'inRoomBanner', 'roomPin',
-      'roomVerify', 'linkMicFanTicketMethod', 'linkMicMethod',
-      'oecLiveShopping', 'msgDetect', 'linkMessage',
-      'linkLayer', 'accessControl', 'accessRecall',
-      'boostCard', 'bottomMessage', 'capsule', 'gameRankNotify',
-      'giftBroadcast', 'giftDynamicRestriction', 'giftPanelUpdate',
-      'giftPrompt', 'guide', 'hourlyRank', 'linkMicLayoutState',
-      'linkState', 'liveGameIntro', 'marqueeAnnouncement',
-      'notice', 'partnershipDropsUpdate', 'partnershipGameOffline',
-      'partnershipPunish', 'perception', 'roomNotify', 'speaker',
-      'subPinEvent', 'toast', 'viewerPicksUpdate',
+    // Important events only - skip high-frequency noise events
+    const importantEvents = [
+      'chat', 'gift', 'member', 'social', 'envelope',
+      'follow', 'share', 'subNotify', 'superFan', 'superFanJoin',
+      'liveIntro', 'questionNew',
     ];
 
-    events.forEach((eventName) => {
+    importantEvents.forEach((eventName) => {
       connection.on(eventName, (data: any) => {
         const msg = toChatMessage(data, eventName);
         if (msg) onMessageCb?.(msg);
@@ -106,11 +93,20 @@ function toChatMessage(data: any, eventName: string): ChatMessage | null {
   const rawBadges = data.badges || data.user?.badges || data.sender?.badges || [];
   const badges: string[] = rawBadges.map((b: any) => {
     if (typeof b === 'string') return b;
-    return b.label || b.type || b.name || b.badgeType || b.url || '';
+    // Extract badge label/type from various badge formats
+    return b.label || b.type || b.name || b.badgeType || b.displayType || b.url || '';
   }).filter(Boolean);
 
-  // Extract user level / fan level
-  const userLevel = data.user?.level || data.level || data.fanLevel || 0;
+  // Extract user level from badges or data
+  let userLevel = data.user?.level || data.level || data.fanLevel || 0;
+  // Some TikTok badge formats have level info
+  if (!userLevel) {
+    for (const badge of rawBadges) {
+      const b = badge.label || badge.type || badge.name || '';
+      const lvlMatch = String(b).match(/Level\s*(\d+)/i);
+      if (lvlMatch) { userLevel = parseInt(lvlMatch[1]); break; }
+    }
+  }
   const followerCount = data.followInfo?.followerCount || data.followers || 0;
   const followStatus = data.followInfo?.followStatus || 0;
 

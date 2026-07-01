@@ -75,7 +75,6 @@ export function Dashboard() {
   const [kickError, setKickError] = useState('');
 
   const dashboardMessages = messages.slice(-(settings.dashboardMaxMessages || 100));
-  const hasAutoConnected = useRef(false);
 
   useEffect(() => {
     init();
@@ -111,45 +110,13 @@ export function Dashboard() {
     kickConnector.onMessage((msg) => addMessage(msg));
   }, []);
 
-  // Load saved channels when settings change + auto-connect on first load
+  // Load saved channels when settings change
   useEffect(() => {
     const saved = settings.savedChannels;
     if (saved?.twitch) setTwitchChannel(saved.twitch);
     if (saved?.youtube) setYoutubeChannel(saved.youtube);
     if (saved?.tiktok) setTiktokChannel(saved.tiktok);
     if (saved?.kick) setKickChannel(saved.kick);
-
-    // Auto-connect on first load
-    if (!hasAutoConnected.current && saved) {
-      hasAutoConnected.current = true;
-      const savedChannels = saved;
-      setTimeout(async () => {
-        if (savedChannels.twitch) {
-          setConnectionStatus('twitch', 'connecting');
-          setTwitchError('');
-          try { await twitchConnector.connect(savedChannels.twitch); }
-          catch (err: any) { setTwitchError(err.message || 'Connection failed'); }
-        }
-        if (savedChannels.youtube) {
-          setConnectionStatus('youtube', 'connecting');
-          setYoutubeError('');
-          try { await youtubeConnector.connect(savedChannels.youtube); }
-          catch (err: any) { setYoutubeError(err.message || 'Connection failed'); }
-        }
-        if (savedChannels.tiktok) {
-          setConnectionStatus('tiktok', 'connecting');
-          setTiktokError('');
-          try { await tiktokConnector.connect(savedChannels.tiktok); }
-          catch (err: any) { setTiktokError(err.message || 'Connection failed'); }
-        }
-        if (savedChannels.kick) {
-          setConnectionStatus('kick', 'connecting');
-          setKickError('');
-          try { await kickConnector.connect(savedChannels.kick); }
-          catch (err: any) { setKickError(err.message || 'Connection failed'); }
-        }
-      }, 500); // Small delay to ensure connectors are ready
-    }
   }, [settings.savedChannels]);
 
   useEffect(() => {

@@ -11,6 +11,7 @@ export const store = new Store<StoreSchema>({
     settings: {
       language: 'en',
       youtubeApiKey: '',
+  youtubeMode: 'scrape',
       savedChannels: {},
   streamMode: false,
       isLocked: true,

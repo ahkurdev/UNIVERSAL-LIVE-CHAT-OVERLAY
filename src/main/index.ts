@@ -21,6 +21,7 @@ const store = new ElectronStore({
     settings: {
       language: 'en',
       youtubeApiKey: '',
+  youtubeMode: 'scrape',
       savedChannels: {},
   streamMode: false,
       isLocked: false,
@@ -165,7 +166,7 @@ app.whenReady().then(() => {
   createOverlayWindow();
 
   // Set window references for main-process connectors
-  youtubeSetWindows(dashboardWindow, overlayWindow);
+  youtubeSetWindows(dashboardWindow);
 
   app.on('activate', function () {
     if (BrowserWindow.getAllWindows().length === 0) {

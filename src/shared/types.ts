@@ -29,6 +29,7 @@ export type ConnectionStatus = 'idle' | 'connecting' | 'connected' | 'error';
 export interface AppSettings {
   // General
   language: string;
+  youtubeMode: 'scrape' | 'apikey';
   youtubeApiKey: string;
   savedChannels: Record<string, string>;
   streamMode: boolean; // { twitch: 'channel', youtube: 'url', tiktok: '@user', kick: 'slug' }

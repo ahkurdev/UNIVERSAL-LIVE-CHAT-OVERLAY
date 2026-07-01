@@ -15,6 +15,7 @@ const PLATFORM_META: Record<string, { label: string; icon: string; accentA: stri
 const DEFAULT_SETTINGS: AppSettings = {
   language: 'en',
   youtubeApiKey: '',
+  youtubeMode: 'scrape',
   savedChannels: {},
   streamMode: false,
   isLocked: false,

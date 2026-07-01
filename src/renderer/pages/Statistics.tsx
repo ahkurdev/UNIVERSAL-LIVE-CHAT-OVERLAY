@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useChatStore } from '../store/chatStore'
+import { BarChart3, Settings, Download, ArrowLeft } from 'lucide-react'
 import '../index.css'
 
 export function Statistics() {
@@ -79,27 +80,27 @@ export function Statistics() {
           <div className="flex items-center justify-between">
             <h1 className="text-lg font-bold text-white">Statistics</h1>
             <button onClick={() => navigate('/')}
-              className="text-gray-500 hover:text-gray-300 transition-colors p-1" title="Back">←</button>
+              className="text-gray-500 hover:text-gray-300 transition-colors p-1.5 rounded-lg hover:bg-gray-800/50" title="Back"><ArrowLeft size={18} /></button>
           </div>
         </div>
         <nav className="flex-1 px-3 py-4 space-y-2">
           <button onClick={() => navigate('/')}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-gray-400 hover:text-gray-200 hover:bg-gray-800/50 transition-all">
-            <span>📊</span> Dashboard
+            <BarChart3 size={16} /> Dashboard
           </button>
           <button onClick={() => navigate('/settings')}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-gray-400 hover:text-gray-200 hover:bg-gray-800/50 transition-all">
-            <span>⚙</span> Settings
+            <Settings size={16} /> Settings
           </button>
         </nav>
         <div className="px-3 py-3 border-t border-gray-800/60 space-y-2">
           <button onClick={exportCSV}
-            className="w-full px-3 py-2 rounded-xl text-xs font-bold bg-gray-800 text-gray-400 hover:text-gray-200 hover:bg-gray-700 transition-all">
-            Export CSV
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-bold bg-gray-800 text-gray-400 hover:text-gray-200 hover:bg-gray-700 transition-all">
+            <Download size={14} /> Export CSV
           </button>
           <button onClick={exportJSON}
-            className="w-full px-3 py-2 rounded-xl text-xs font-bold bg-gray-800 text-gray-400 hover:text-gray-200 hover:bg-gray-700 transition-all">
-            Export JSON
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-bold bg-gray-800 text-gray-400 hover:text-gray-200 hover:bg-gray-700 transition-all">
+            <Download size={14} /> Export JSON
           </button>
         </div>
       </div>

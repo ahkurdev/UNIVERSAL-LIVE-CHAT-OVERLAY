@@ -2,15 +2,16 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSettingsStore } from '../store/settingsStore'
 import { AppSettings } from '@shared/types'
+import { Zap, Grid3X3, Sparkles, MessageCircle, Volume2, Mic, ArrowLeft } from 'lucide-react'
 import '../index.css'
 
 const CATEGORIES = [
-  { id: 'general', label: 'General', icon: '⚡' },
-  { id: 'overlay', label: 'Overlay', icon: '⊞' },
-  { id: 'appearance', label: 'Appearance', icon: '✦' },
-  { id: 'chat', label: 'Chat', icon: '💬' },
-  { id: 'sound', label: 'Sound', icon: '🔊' },
-  { id: 'tts', label: 'TTS', icon: '🎤' },
+  { id: 'general', label: 'General', icon: <Zap size={16} /> },
+  { id: 'overlay', label: 'Overlay', icon: <Grid3X3 size={16} /> },
+  { id: 'appearance', label: 'Appearance', icon: <Sparkles size={16} /> },
+  { id: 'chat', label: 'Chat', icon: <MessageCircle size={16} /> },
+  { id: 'sound', label: 'Sound', icon: <Volume2 size={16} /> },
+  { id: 'tts', label: 'TTS', icon: <Mic size={16} /> },
 ] as const;
 
 type CategoryId = typeof CATEGORIES[number]['id'];
@@ -120,7 +121,7 @@ export function Settings() {
           <div className="flex items-center justify-between">
             <h1 className="text-lg font-bold text-white tracking-tight">Settings</h1>
             <button onClick={() => navigate('/')}
-              className="text-gray-500 hover:text-gray-300 transition-colors p-1" title="Back to Dashboard">←</button>
+              className="text-gray-500 hover:text-gray-300 transition-colors p-1.5 rounded-lg hover:bg-gray-800/50" title="Back to Dashboard"><ArrowLeft size={18} /></button>
           </div>
         </div>
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">

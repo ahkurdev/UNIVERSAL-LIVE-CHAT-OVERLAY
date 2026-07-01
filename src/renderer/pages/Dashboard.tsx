@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useChatStore } from '../store/chatStore'
 import { useSettingsStore } from '../store/settingsStore'
+import { BarChart3, Settings, MessageCircle } from 'lucide-react'
 import { MockConnector } from '../connectors/base/mock'
 import { TwitchConnector } from '../connectors/twitch'
 import { YouTubeConnector } from '../connectors/youtube'
@@ -201,12 +202,12 @@ export function Dashboard() {
             </div>
             <div className="flex gap-1">
               <button onClick={() => navigate('/statistics')}
-                className="text-gray-500 hover:text-gray-300 text-lg transition-colors p-1" title="Statistics">
-                📊
+                className="text-gray-500 hover:text-gray-300 transition-colors p-1.5 rounded-lg hover:bg-gray-800/50" title="Statistics">
+                <BarChart3 size={18} />
               </button>
               <button onClick={() => navigate('/settings')}
-                className="text-gray-500 hover:text-gray-300 text-lg transition-colors p-1" title="Settings">
-                ⚙
+                className="text-gray-500 hover:text-gray-300 transition-colors p-1.5 rounded-lg hover:bg-gray-800/50" title="Settings">
+                <Settings size={18} />
               </button>
             </div>
           </div>
@@ -324,7 +325,7 @@ export function Dashboard() {
         <div className="flex-1 px-6 py-4 overflow-y-auto">
           {dashboardMessages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-gray-600">
-              <div className="text-3xl mb-3 opacity-30">💬</div>
+              <MessageCircle size={40} className="opacity-30 mb-3" />
               <p className="text-sm italic">No messages yet</p>
               <p className="text-xs mt-1 opacity-60">Connect Mock or a Twitch channel</p>
             </div>

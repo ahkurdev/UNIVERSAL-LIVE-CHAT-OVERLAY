@@ -249,48 +249,44 @@ export function Dashboard() {
           <ConnectionRow label="Twitch" status={twitchStatus} connectedColor="#9146FF"
             onToggle={toggleTwitchConnection}
             disabled={!twitchChannel.trim() && twitchStatus !== 'connected'}>
-            {twitchStatus !== 'connected' && (
-              <input type="text" placeholder="twitch channel name" value={twitchChannel}
-                onChange={(e) => setTwitchChannel(e.target.value.replace(/[^a-zA-Z0-9_]/g, ''))}
-                className="w-full bg-[#15151c] border border-gray-700/60 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[#9146FF] focus:ring-1 focus:ring-[#9146FF]/50 transition-all"
-                onKeyDown={(e) => { if (e.key === 'Enter' && twitchChannel.trim()) toggleTwitchConnection(); }} />
-            )}
+            <input type="text" placeholder="twitch channel name" value={twitchChannel}
+              disabled={twitchStatus === 'connected'}
+              onChange={(e) => setTwitchChannel(e.target.value.replace(/[^a-zA-Z0-9_]/g, ''))}
+              className="w-full bg-[#15151c] border border-gray-700/60 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:border-[#9146FF] focus:ring-1 focus:ring-[#9146FF]/50 transition-all"
+              onKeyDown={(e) => { if (e.key === 'Enter' && twitchChannel.trim()) toggleTwitchConnection(); }} />
             {twitchError && <div className="text-xs text-red-400 bg-red-500/10 rounded-lg px-3 py-2 border border-red-500/20">{twitchError}</div>}
             {twitchStatus === 'idle' && !twitchError && <p className="text-[11px] text-gray-600">Connect to any live Twitch channel</p>}
           </ConnectionRow>
 
           <ConnectionRow label="YouTube" status={youtubeStatus} connectedColor="#FF0033"
             onToggle={toggleYoutube} disabled={!youtubeChannel.trim() && youtubeStatus !== 'connected'}>
-            {youtubeStatus !== 'connected' && (
-              <input type="text" placeholder="channel name or video ID" value={youtubeChannel}
-                onChange={(e) => setYoutubeChannel(e.target.value)}
-                className="w-full bg-[#15151c] border border-gray-700/60 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[#FF0033] focus:ring-1 focus:ring-[#FF0033]/50 transition-all"
-                onKeyDown={(e) => { if (e.key === 'Enter' && youtubeChannel.trim()) toggleYoutube(); }} />
-            )}
+            <input type="text" placeholder="channel name or video ID" value={youtubeChannel}
+              disabled={youtubeStatus === 'connected'}
+              onChange={(e) => setYoutubeChannel(e.target.value)}
+              className="w-full bg-[#15151c] border border-gray-700/60 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:border-[#FF0033] focus:ring-1 focus:ring-[#FF0033]/50 transition-all"
+              onKeyDown={(e) => { if (e.key === 'Enter' && youtubeChannel.trim()) toggleYoutube(); }} />
             {youtubeError && <div className="text-xs text-red-400 bg-red-500/10 rounded-lg px-3 py-2 border border-red-500/20">{youtubeError}</div>}
             {youtubeStatus === 'idle' && !youtubeError && <p className="text-[11px] text-gray-600">Connect to a live YouTube stream</p>}
           </ConnectionRow>
 
           <ConnectionRow label="TikTok" status={tiktokStatus} connectedColor="#FE2C55"
             onToggle={toggleTiktok} disabled={!tiktokChannel.trim() && tiktokStatus !== 'connected'}>
-            {tiktokStatus !== 'connected' && (
-              <input type="text" placeholder="@username" value={tiktokChannel}
-                onChange={(e) => setTiktokChannel(e.target.value)}
-                className="w-full bg-[#15151c] border border-gray-700/60 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[#FE2C55] focus:ring-1 focus:ring-[#FE2C55]/50 transition-all"
-                onKeyDown={(e) => { if (e.key === 'Enter' && tiktokChannel.trim()) toggleTiktok(); }} />
-            )}
+            <input type="text" placeholder="@username" value={tiktokChannel}
+              disabled={tiktokStatus === 'connected'}
+              onChange={(e) => setTiktokChannel(e.target.value)}
+              className="w-full bg-[#15151c] border border-gray-700/60 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:border-[#FE2C55] focus:ring-1 focus:ring-[#FE2C55]/50 transition-all"
+              onKeyDown={(e) => { if (e.key === 'Enter' && tiktokChannel.trim()) toggleTiktok(); }} />
             {tiktokError && <div className="text-xs text-red-400 bg-red-500/10 rounded-lg px-3 py-2 border border-red-500/20">{tiktokError}</div>}
             {tiktokStatus === 'idle' && !tiktokError && <p className="text-[11px] text-gray-600">Connect to a TikTok live stream</p>}
           </ConnectionRow>
 
           <ConnectionRow label="Kick" status={kickStatus} connectedColor="#53FC18"
             onToggle={toggleKick} disabled={!kickChannel.trim() && kickStatus !== 'connected'}>
-            {kickStatus !== 'connected' && (
-              <input type="text" placeholder="channel slug" value={kickChannel}
-                onChange={(e) => setKickChannel(e.target.value)}
-                className="w-full bg-[#15151c] border border-gray-700/60 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[#53FC18] focus:ring-1 focus:ring-[#53FC18]/50 transition-all"
-                onKeyDown={(e) => { if (e.key === 'Enter' && kickChannel.trim()) toggleKick(); }} />
-            )}
+            <input type="text" placeholder="channel slug" value={kickChannel}
+              disabled={kickStatus === 'connected'}
+              onChange={(e) => setKickChannel(e.target.value)}
+              className="w-full bg-[#15151c] border border-gray-700/60 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:border-[#53FC18] focus:ring-1 focus:ring-[#53FC18]/50 transition-all"
+              onKeyDown={(e) => { if (e.key === 'Enter' && kickChannel.trim()) toggleKick(); }} />
             {kickError && <div className="text-xs text-red-400 bg-red-500/10 rounded-lg px-3 py-2 border border-red-500/20">{kickError}</div>}
             {kickStatus === 'idle' && !kickError && <p className="text-[11px] text-gray-600">Connect to a Kick channel</p>}
           </ConnectionRow>

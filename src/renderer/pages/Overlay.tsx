@@ -2,7 +2,6 @@ import { useEffect, useState, useLayoutEffect, useRef } from 'react'
 import { ChatMessage, AppSettings } from '@shared/types'
 import { useSettingsStore } from '../store/settingsStore'
 import { motion, AnimatePresence } from 'framer-motion'
-import { soundService } from '../services/soundService'
 import '../index.css'
 
 const PLATFORM_META: Record<string, { label: string; icon: string; accentA: string; accentB: string; darkText: boolean }> = {
@@ -61,12 +60,8 @@ export function Overlay() {
   const currentSettings = { ...DEFAULT_SETTINGS, ...settings };
 
   // Refs for settings used in IPC callbacks (avoid stale closure)
-  const soundRef = useRef({ enabled: currentSettings.soundEnabled, volume: currentSettings.soundVolume });
-  const ttsRef = useRef({ enabled: currentSettings.ttsEnabled, voice: currentSettings.ttsVoice, rate: currentSettings.ttsRate, volume: currentSettings.ttsVolume });
   const fadeRef = useRef(currentSettings.chatFadeDuration);
   const maxRef = useRef(currentSettings.maxChats);
-  soundRef.current = { enabled: currentSettings.soundEnabled, volume: currentSettings.soundVolume };
-  ttsRef.current = { enabled: currentSettings.ttsEnabled, voice: currentSettings.ttsVoice, rate: currentSettings.ttsRate, volume: currentSettings.ttsVolume };
   fadeRef.current = currentSettings.chatFadeDuration;
   maxRef.current = currentSettings.maxChats;
 
@@ -74,38 +69,23 @@ export function Overlay() {
     document.body.style.backgroundColor = 'transparent';
     document.documentElement.style.backgroundColor = 'transparent';
     init();
-  }, []);
 
-  useEffect(() => {
-    console.log('[Overlay] Mounted, api:',
     // @ts-ignore
-    typeof window.api !== 'undefined' ? 'yes' : 'no');
-    // @ts-ignore
-    if (!window.api) return;
+    if (!window.electron?.ipcRenderer) {
+      console.error('[Overlay] No electron IPC available');
+      return;
+    }
 
-    let prevLen = 0;
+    // Direct IPC listener (bypasses preload abstraction for reliability)
     // @ts-ignore
-    window.api.onMessagesUpdate((allMessages: ChatMessage[]) => {
+    window.electron.ipcRenderer.on('messages-update', (_event: any, allMessages: ChatMessage[]) => {
+      console.log('[Overlay] messages received:', allMessages?.length);
       if (!allMessages || allMessages.length === 0) return;
-      // Sound & TTS for truly new messages
-      const newMessages = allMessages.slice(prevLen);
-      newMessages.forEach((msg) => {
-        const s = soundRef.current;
-        const t = ttsRef.current;
-        const isEvent = msg.eventType && msg.eventType !== 'chat';
-        if (isEvent && s.enabled) {
-          soundService.playNotification(msg.eventType!, s.volume / 100);
-        }
-        if (t.enabled && msg.message) {
-          soundService.speak(`${msg.username} says: ${msg.message}`, t.voice, t.rate, t.volume / 100);
-        }
-      });
-      prevLen = allMessages.length;
       setDisplayMessages(allMessages);
     });
 
     // @ts-ignore
-    window.api.onSettingsUpdate((newSettings: AppSettings) => {
+    window.electron.ipcRenderer.on('settings-update', (_event: any, newSettings: AppSettings) => {
       useSettingsStore.setState((state) => ({
         settings: { ...state.settings, ...newSettings }
       }));

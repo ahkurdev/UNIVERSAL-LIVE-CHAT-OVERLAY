@@ -7,13 +7,31 @@ let onConnectedCb: (() => void) | null = null;
 let onDisconnectedCb: (() => void) | null = null;
 let onErrorCb: ((err: Error) => void) | null = null;
 
+// Map TikTok event type to our eventType
+const EVENT_MAP: Record<string, ChatMessage['eventType']> = {
+  chat: 'chat',
+  gift: 'gift',
+  member: 'gift',
+  like: 'chat',
+  social: 'chat',
+  follow: 'chat',
+  share: 'chat',
+  envelope: 'gift',
+  questionNew: 'chat',
+  roomUser: 'chat',
+  emote: 'chat',
+  goalUpdate: 'chat',
+  subNotify: 'gift',
+  superFan: 'gift',
+  superFanJoin: 'gift',
+};
+
 export async function tiktokConnect(username: string): Promise<void> {
   try {
     if (!LiveConnection) {
       const mod = await import('tiktok-live-connector');
       LiveConnection = mod.TikTokLiveConnection;
     }
-
     if (connection) await tiktokDisconnect();
 
     connection = new LiveConnection(username, {});
@@ -22,20 +40,31 @@ export async function tiktokConnect(username: string): Promise<void> {
     connection.on('disconnected', () => onDisconnectedCb?.());
     connection.on('error', (err: any) => onErrorCb?.(err instanceof Error ? err : new Error(String(err))));
 
-    connection.on('chat', (data: any) => {
-      console.log('[TikTok] chat event received:', JSON.stringify(data).substring(0, 200));
-      const msg = toChatMessage(data);
-      if (msg) {
-        console.log('[TikTok] message parsed OK:', msg.username, msg.message);
-        onMessageCb?.(msg);
-      } else {
-        console.log('[TikTok] message parsed as NULL');
-      }
-    });
+    // Register all events
+    const events = [
+      'chat', 'gift', 'member', 'like', 'social', 'envelope',
+      'questionNew', 'follow', 'share', 'roomUser', 'emote',
+      'goalUpdate', 'subNotify', 'superFan', 'superFanJoin',
+      'liveIntro', 'linkMicBattle', 'linkMicArmies',
+      'streamEnd', 'roomMessage', 'captionMessage', 'pollMessage',
+      'rankUpdate', 'rankText', 'inRoomBanner', 'roomPin',
+      'roomVerify', 'linkMicFanTicketMethod', 'linkMicMethod',
+      'oecLiveShopping', 'msgDetect', 'linkMessage',
+      'linkLayer', 'accessControl', 'accessRecall',
+      'boostCard', 'bottomMessage', 'capsule', 'gameRankNotify',
+      'giftBroadcast', 'giftDynamicRestriction', 'giftPanelUpdate',
+      'giftPrompt', 'guide', 'hourlyRank', 'linkMicLayoutState',
+      'linkState', 'liveGameIntro', 'marqueeAnnouncement',
+      'notice', 'partnershipDropsUpdate', 'partnershipGameOffline',
+      'partnershipPunish', 'perception', 'roomNotify', 'speaker',
+      'subPinEvent', 'toast', 'viewerPicksUpdate',
+    ];
 
-    connection.on('gift', (data: any) => {
-      const msg = toChatMessage(data, 'gift');
-      if (msg) onMessageCb?.(msg);
+    events.forEach((eventName) => {
+      connection.on(eventName, (data: any) => {
+        const msg = toChatMessage(data, eventName);
+        if (msg) onMessageCb?.(msg);
+      });
     });
 
     connection.connect().catch((err: any) => {
@@ -57,40 +86,93 @@ export function tiktokDisconnect(): void {
 
 export function tiktokCleanup(): void {
   tiktokDisconnect();
-  onMessageCb = null;
-  onConnectedCb = null;
-  onDisconnectedCb = null;
-  onErrorCb = null;
+  onMessageCb = null; onConnectedCb = null; onDisconnectedCb = null; onErrorCb = null;
 }
 
-function toChatMessage(data: any, eventType: ChatMessage['eventType'] = 'chat'): ChatMessage | null {
+function toChatMessage(data: any, eventName: string): ChatMessage | null {
   if (!data) return null;
-  // Log raw data for debugging
-  console.log('[TikTok] raw data keys:', Object.keys(data).join(', '));
 
   const username = data.nickname || data.uniqueId || data.user?.uniqueId || data.user?.nickname ||
-                   data.sender?.nickname || data.sender?.uniqueId || '';
+                   data.sender?.nickname || data.sender?.uniqueId || data.userId || '';
   const comment = data.comment || data.describe || data.message || data.content ||
-                  data.giftName || data.text || '';
-  const avatar = data.profilePictureUrl || data.user?.profilePicture?.url || '';
-  const id = data.msgId || data.createTime || Date.now();
-  const timestamp = (data.createTime || data.timestamp || 0) * 1000 || Date.now();
+                  data.giftName || data.text || data.label || data.displayText || '';
+  const avatar = data.profilePictureUrl || data.user?.profilePicture?.url ||
+                 data.sender?.profilePicture?.url || '';
 
-  if (!username && !comment) return null;
+  // Skip if no meaningful data
+  if (!username && !comment && eventName !== 'roomUser' && eventName !== 'liveIntro') return null;
+
+  // Extract badges with details
+  const rawBadges = data.badges || data.user?.badges || data.sender?.badges || [];
+  const badges: string[] = rawBadges.map((b: any) => {
+    if (typeof b === 'string') return b;
+    return b.label || b.type || b.name || b.badgeType || b.url || '';
+  }).filter(Boolean);
+
+  // Extract user level / fan level
+  const userLevel = data.user?.level || data.level || data.fanLevel || 0;
+  const followerCount = data.followInfo?.followerCount || data.followers || 0;
+  const followStatus = data.followInfo?.followStatus || 0;
+
+  // Gift-specific data
+  const giftName = data.giftName || data?.gift?.describe || data?.gift?.name || '';
+  const giftCount = data.giftCount || data?.repeatCount || data?.combo || 1;
+  const diamondCount = data.diamondCount || data?.gift?.diamondCount || 0;
+
+  // Build message text based on event type
+  let displayMessage = comment;
+
+  if (eventName === 'gift' && !displayMessage) {
+    displayMessage = `Sent ${giftCount}x ${giftName || 'Gift'}` +
+      (diamondCount > 0 ? ` (${diamondCount} 💎)` : '');
+  } else if (eventName === 'member') {
+    displayMessage = `Joined as member! 🎉`;
+  } else if (eventName === 'like') {
+    displayMessage = `Liked! ❤️ (x${data.likeCount || 1})`;
+  } else if (eventName === 'follow') {
+    displayMessage = `Followed the stream!`;
+  } else if (eventName === 'share') {
+    displayMessage = `Shared the stream! 🔄`;
+  } else if (eventName === 'social') {
+    displayMessage = comment || `Social interaction`;
+  } else if (eventName === 'envelope') {
+    displayMessage = `Sent an envelope! 💌` + (diamondCount > 0 ? ` (${diamondCount} 💎)` : '');
+  } else if (eventName === 'roomUser') {
+    displayMessage = `Joined the stream 👋`;
+  } else if (eventName === 'emote') {
+    displayMessage = comment || 'Emote!';
+  } else if (eventName === 'subNotify') {
+    displayMessage = `Subscribed! 🎉`;
+  } else if (eventName === 'superFan' || eventName === 'superFanJoin') {
+    displayMessage = `Became a Super Fan! ⭐`;
+  }
+
+  if (!displayMessage && eventName !== 'roomUser') return null;
+
+  const id = data.msgId || `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+  const eventType = EVENT_MAP[eventName] || 'chat';
 
   return {
-    id: `tk-${id}-${Math.random().toString(36).slice(2, 7)}`,
+    id: `tk-${id}`,
     platform: 'tiktok',
-    username: username || 'Unknown',
+    username: username || (eventName === 'roomUser' ? 'Viewer' : 'Unknown'),
     avatar: avatar || '',
-    message: comment || '',
-    timestamp,
-    badges: data.badges?.map((b: any) => b.label || b.type || '') || [],
+    message: displayMessage || '',
+    timestamp: (data.createTime || data.timestamp || 0) * 1000 || Date.now(),
+    badges,
     color: '#FE2C55',
-    isModerator: data.isModerator || data.moderation || false,
-    isSubscriber: data.isSubscriber || (data.followInfo?.followStatus || 0) > 1 || false,
+    isModerator: data.isModerator || data.moderation || badges.some((b: string) => /moderator|mod/i.test(b)),
+    isSubscriber: data.isSubscriber || followStatus > 1 || badges.some((b: string) => /subscriber|sub|member/i.test(b)),
     isVerified: data.isVerified || false,
-    eventType: data.giftId ? 'gift' : eventType,
+    eventType,
+    extra: { // Extra TikTok data for rich display
+      level: userLevel,
+      giftName,
+      giftCount,
+      diamondCount,
+      followerCount,
+      eventName,
+    },
   };
 }
 

@@ -228,6 +228,11 @@ export function Overlay() {
                           'bg-green-500/30 text-green-300'
                         }`}>
                           {msg.eventType === 'superchat' ? '⭐ Superchat' :
+                           msg.eventType === 'gift' && msg.extra?.eventName === 'member' ? '🎉 Member' :
+                           msg.eventType === 'gift' && msg.extra?.eventName === 'follow' ? '➕ Follow' :
+                           msg.eventType === 'gift' && msg.extra?.eventName === 'share' ? '🔄 Share' :
+                           msg.eventType === 'gift' && msg.extra?.eventName === 'like' ? '❤️ Like' :
+                           msg.eventType === 'gift' && msg.extra?.eventName === 'roomUser' ? '👋 Join' :
                            msg.eventType === 'gift' ? '🎁 Gift' :
                            msg.eventType === 'cheers' ? '🎉 Cheers' : '💎'}
                         </span>
@@ -235,9 +240,28 @@ export function Overlay() {
                       <span className="text-sm font-bold text-[#F5F5F7] truncate max-w-[200px]">
                         {msg.username}
                       </span>
+                      {/* TikTok badges */}
+                      {msg.platform === 'tiktok' && msg.badges?.length > 0 && (
+                        <span className="text-[9px] font-bold px-1 py-0.5 rounded bg-white/10 text-gray-300 truncate max-w-[80px]">
+                          {msg.badges.slice(0, 2).join(', ')}
+                        </span>
+                      )}
+                      {msg.platform === 'tiktok' && msg.extra?.level > 0 && (
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-gradient-to-r from-[#FE2C55]/40 to-[#25F4EE]/40 text-white">
+                          Lv.{msg.extra!.level}
+                        </span>
+                      )}
                     </div>
                     <div className="text-[13.5px] text-[#EDEDF0] leading-snug mt-1 break-words">
                       {msg.message}
+                      {/* TikTok gift details */}
+                      {msg.platform === 'tiktok' && msg.extra?.giftName && (
+                        <span className="ml-1 text-pink-300 font-semibold">
+                          {msg.extra.giftCount > 1 && `${msg.extra.giftCount}x `}
+                          {msg.extra.giftName}
+                          {msg.extra.diamondCount > 0 && ` 💎${msg.extra.diamondCount}`}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </motion.div>

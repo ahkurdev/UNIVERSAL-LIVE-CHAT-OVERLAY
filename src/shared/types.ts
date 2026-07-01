@@ -11,6 +11,7 @@ export interface ChatMessage {
   isSubscriber: boolean;
   isVerified: boolean;
   eventType?: "chat" | "gift" | "donation" | "superchat" | "cheers";
+  extra?: Record<string, any>;
 }
 
 export interface ChatConnector {

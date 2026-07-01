@@ -36,6 +36,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   hideMessagesAfter: 12,
   duplicateFilter: true,
   duplicateFilterWindow: 3,
+    dashboardMaxMessages: 100,
   soundEnabled: false,
   soundVolume: 80,
   notificationSound: 'default',

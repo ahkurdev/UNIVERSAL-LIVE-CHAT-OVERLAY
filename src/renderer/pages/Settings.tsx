@@ -38,6 +38,7 @@ const SETTINGS: SettingField[] = [
   ], category: 'general' },
   { key: 'youtubeApiKey', label: 'YouTube API Key', type: 'text', placeholder: 'AIzaSy...', description: 'Only needed when YouTube Mode = Use API Key', category: 'general' },
   { key: 'maxMessages', label: 'Max Stored Messages', type: 'number', min: 50, max: 1000, category: 'general' },
+  { key: 'dashboardMaxMessages', label: 'Dashboard Chat Limit', type: 'range', min: 10, max: 200, category: 'general' },
 
   { key: 'isLocked', label: 'Lock Position', type: 'toggle', category: 'overlay' },
   { key: 'opacity', label: 'Opacity', type: 'range', min: 10, max: 100, suffix: '%', category: 'overlay' },

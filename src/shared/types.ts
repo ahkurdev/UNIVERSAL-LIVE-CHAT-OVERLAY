@@ -54,6 +54,7 @@ export interface AppSettings {
   
   // Chat
   maxMessages: number;
+  dashboardMaxMessages: number;
   hideMessagesAfter: number;
   duplicateFilter: boolean;
   duplicateFilterWindow: number;

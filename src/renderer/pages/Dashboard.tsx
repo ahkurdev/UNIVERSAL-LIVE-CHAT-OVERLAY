@@ -74,6 +74,8 @@ export function Dashboard() {
   const [kickChannel, setKickChannel] = useState('');
   const [kickError, setKickError] = useState('');
 
+  const dashboardMessages = messages.slice(-(settings.dashboardMaxMessages || 100));
+
   useEffect(() => {
     init();
 
@@ -314,7 +316,7 @@ export function Dashboard() {
         </div>
 
         <div className="flex-1 px-6 py-4 overflow-y-auto">
-          {messages.length === 0 ? (
+          {dashboardMessages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-gray-600">
               <div className="text-3xl mb-3 opacity-30">💬</div>
               <p className="text-sm italic">No messages yet</p>
@@ -322,7 +324,7 @@ export function Dashboard() {
             </div>
           ) : (
             <div className="space-y-2">
-              {messages.map((msg) => (
+              {dashboardMessages.map((msg) => (
                 <div key={msg.id}
                   className="px-4 py-3 bg-[#1a1a22] rounded-xl border-l-[3px] border-gray-700 hover:bg-[#22222d] transition-colors text-sm flex items-start gap-4"
                   style={{

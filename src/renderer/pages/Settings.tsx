@@ -39,6 +39,8 @@ const SETTINGS: SettingField[] = [
   { key: 'youtubeApiKey', label: 'YouTube API Key', type: 'text', placeholder: 'AIzaSy...', description: 'Only needed when YouTube Mode = Use API Key', category: 'general' },
   { key: 'maxMessages', label: 'Max Stored Messages', type: 'number', min: 50, max: 1000, category: 'general' },
   { key: 'dashboardMaxMessages', label: 'Dashboard Chat Limit', type: 'range', min: 10, max: 200, category: 'general' },
+  { key: 'obsServerEnabled', label: 'OBS Browser Source', type: 'toggle', description: 'Start local web server for OBS', category: 'general' },
+  { key: 'obsServerPort', label: 'OBS Server Port', type: 'number', min: 1024, max: 65535, description: 'Default: 3000', category: 'general' },
 
   { key: 'isLocked', label: 'Lock Position', type: 'toggle', category: 'overlay' },
   { key: 'opacity', label: 'Opacity', type: 'range', min: 10, max: 100, suffix: '%', category: 'overlay' },
@@ -61,6 +63,12 @@ const SETTINGS: SettingField[] = [
 
   { key: 'duplicateFilter', label: 'Duplicate Filter', type: 'toggle', category: 'chat' },
   { key: 'duplicateFilterWindow', label: 'Dedup Window', type: 'range', min: 1, max: 10, suffix: 's', category: 'chat' },
+  { key: 'floodProtection', label: 'Flood Protection', type: 'toggle', category: 'chat' },
+  { key: 'floodMaxPerSecond', label: 'Max Messages/sec', type: 'range', min: 1, max: 20, category: 'chat' },
+  { key: 'blacklistWords', label: 'Blacklist Words', type: 'text', placeholder: 'word1, word2, word3', description: 'Comma separated words to block', category: 'chat' },
+  { key: 'hideLinks', label: 'Hide Links', type: 'toggle', category: 'chat' },
+  { key: 'hideAllCaps', label: 'Hide ALL CAPS', type: 'toggle', category: 'chat' },
+  { key: 'hideBots', label: 'Hide Bots', type: 'toggle', description: 'Nightbot, Streamlabs, Moobot etc', category: 'chat' },
   { key: 'hideMessagesAfter', label: 'Hide After', type: 'range', min: 3, max: 60, suffix: 's', category: 'chat' },
 
   { key: 'soundEnabled', label: 'Enable Sounds', type: 'toggle', category: 'sound' },

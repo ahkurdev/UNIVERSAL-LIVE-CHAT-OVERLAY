@@ -58,11 +58,21 @@ export interface AppSettings {
   hideMessagesAfter: number;
   duplicateFilter: boolean;
   duplicateFilterWindow: number;
+  floodProtection: boolean;
+  floodMaxPerSecond: number;
+  blacklistWords: string;
+  hideLinks: boolean;
+  hideAllCaps: boolean;
+  hideBots: boolean;
   
   // Sound
   soundEnabled: boolean;
   soundVolume: number;
   notificationSound: string;
+  
+  // OBS Browser Source
+  obsServerEnabled: boolean;
+  obsServerPort: number;
   
   // TTS
   ttsEnabled: boolean;

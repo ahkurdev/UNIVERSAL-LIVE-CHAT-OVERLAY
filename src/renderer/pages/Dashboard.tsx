@@ -232,10 +232,16 @@ export function Dashboard() {
               <h1 className="text-xl font-bold text-white tracking-tight">Dashboard</h1>
               <p className="text-xs text-gray-500 mt-1">Universal Live Chat Overlay</p>
             </div>
-            <button onClick={() => navigate('/settings')}
-              className="text-gray-500 hover:text-gray-300 text-lg transition-colors p-1" title="Settings">
-              ⚙
-            </button>
+            <div className="flex gap-1">
+              <button onClick={() => navigate('/statistics')}
+                className="text-gray-500 hover:text-gray-300 text-lg transition-colors p-1" title="Statistics">
+                📊
+              </button>
+              <button onClick={() => navigate('/settings')}
+                className="text-gray-500 hover:text-gray-300 text-lg transition-colors p-1" title="Settings">
+                ⚙
+              </button>
+            </div>
           </div>
         </div>
 

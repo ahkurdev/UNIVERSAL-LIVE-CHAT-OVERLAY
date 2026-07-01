@@ -10,6 +10,10 @@ import {
 import {
   youtubeConnect, youtubeDisconnect, youtubeSetWindows
 } from './connectors/youtube';
+import {
+  obsServerStart, obsServerStop, obsServerBroadcastMessages,
+  obsServerSetStatusCb, obsServerIsRunning, obsServerGetPort
+} from './obs-server';
 
 let dashboardWindow: BrowserWindow | null;
 let overlayWindow: BrowserWindow | null;
@@ -42,10 +46,18 @@ const store = new ElectronStore({
       hideMessagesAfter: 12,
       duplicateFilter: true,
       duplicateFilterWindow: 3,
+    floodProtection: true,
+    floodMaxPerSecond: 5,
+    blacklistWords: "",
+    hideLinks: false,
+    hideAllCaps: false,
+    hideBots: false,
     dashboardMaxMessages: 100,
       soundEnabled: false,
       soundVolume: 80,
       notificationSound: 'default',
+    obsServerEnabled: false,
+    obsServerPort: 3000,
       ttsEnabled: false,
       ttsVoice: 'default',
       ttsVolume: 80,
@@ -169,6 +181,19 @@ app.whenReady().then(() => {
   // Set window references for main-process connectors
   youtubeSetWindows(dashboardWindow);
 
+  // Start OBS Browser Source server if enabled
+  const settings = store.get('settings') as any;
+  if (settings?.obsServerEnabled) {
+    const obsHtmlPath = join(__dirname, '../renderer/obs-overlay.html');
+    obsServerStart(settings?.obsServerPort || 3000, obsHtmlPath);
+  }
+
+  obsServerSetStatusCb((status, url) => {
+    if (dashboardWindow && !dashboardWindow.isDestroyed()) {
+      dashboardWindow.webContents.send('obs-server-status', status, url);
+    }
+  });
+
   app.on('activate', function () {
     if (BrowserWindow.getAllWindows().length === 0) {
       createDashboardWindow();
@@ -205,7 +230,10 @@ ipcMain.on('set-ignore-mouse-events', (_event, ignore: boolean) => {
 
 // IPC to send chat messages to overlay
 ipcMain.on('messages-update', (_event, messages: ChatMessage[]) => {
-  overlayWindow?.webContents.send('messages-update', messages);
+  if (overlayWindow && !overlayWindow.isDestroyed())
+    overlayWindow.webContents.send('messages-update', messages);
+  // Also broadcast to OBS Browser Source clients
+  obsServerBroadcastMessages(messages.slice(-50)); // Last 50 messages
 });
 
 // IPC to send settings update to overlay
@@ -280,5 +308,24 @@ ipcMain.on('youtube-connect', async (_event, target: string) => {
 
 ipcMain.on('youtube-disconnect', () => {
   youtubeDisconnect();
+});
+
+// --- OBS Browser Source IPC ---
+
+ipcMain.on('obs-server-start', (_event, serverPort: number) => {
+  const obsHtmlPath = join(__dirname, '../renderer/obs-overlay.html');
+  obsServerStart(serverPort || 3000, obsHtmlPath);
+});
+
+ipcMain.on('obs-server-stop', () => {
+  obsServerStop();
+});
+
+ipcMain.on('obs-server-status-request', (_event) => {
+  if (dashboardWindow && !dashboardWindow.isDestroyed()) {
+    const status = obsServerIsRunning() ? 'running' : 'stopped';
+    const url = obsServerIsRunning() ? `http://localhost:${obsServerGetPort()}` : '';
+    dashboardWindow.webContents.send('obs-server-status', status, url);
+  }
 });
 

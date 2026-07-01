@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Chat Overlay - OBS Browser Source</title>
+<style>
+  :root {
+    --tiktok-a: #FE2C55;
+    --tiktok-b: #25F4EE;
+    --youtube: #FF0033;
+    --twitch: #9146FF;
+    --kick: #53FC18;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { background: transparent; font-family: 'Segoe UI', 'Inter', Arial, sans-serif; overflow: hidden; }
+  #chat-feed {
+    position: fixed;
+    bottom: 24px;
+    left: 24px;
+    width: 420px;
+    max-height: 78vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 8px;
+    overflow: hidden;
+  }
+  .msg {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background: rgba(12,12,16,0.65);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-radius: 12px;
+    padding: 9px 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    border-left: 4px solid transparent;
+    animation: slideIn .35s ease-out, fadeHold 12s ease forwards;
+    transform-origin: left center;
+  }
+  @keyframes slideIn { from { opacity: 0; transform: translateX(-24px) scale(0.96); } to { opacity: 1; transform: translateX(0) scale(1); } }
+  @keyframes fadeHold { 0% { opacity: 1; } 88% { opacity: 1; } 100% { opacity: 0; } }
+  .msg.event-superchat { background: linear-gradient(to right, rgba(255,200,0,0.2), rgba(12,12,16,0.65)); border-left-color: #FFD700; box-shadow: 0 0 20px rgba(255,215,0,0.3); }
+  .msg.event-gift { background: linear-gradient(to right, rgba(255,0,150,0.2), rgba(12,12,16,0.65)); border-left-color: #FF69B4; box-shadow: 0 0 20px rgba(255,105,180,0.3); }
+  .msg.event-cheers { background: linear-gradient(to right, rgba(0,150,255,0.2), rgba(12,12,16,0.65)); border-left-color: #00BFFF; box-shadow: 0 0 20px rgba(0,191,255,0.3); }
+  .icon {
+    flex-shrink: 0;
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: bold;
+    color: #fff;
+    overflow: hidden;
+  }
+  .icon img { width: 100%; height: 100%; object-fit: cover; }
+  .body { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+  .top-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .platform-tag {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.4px;
+    text-transform: uppercase; padding: 1px 6px; border-radius: 5px;
+    color: #fff;
+  }
+  .platform-tag.dark-text { color: #0c0c10; }
+  .username { font-size: 13.5px; font-weight: 700; color: #F5F5F7; }
+  .comment { font-size: 13.5px; color: #EDEDF0; word-break: break-word; line-height: 1.35; margin-top: 2px; }
+  .event-badge {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    padding: 1px 6px; border-radius: 5px;
+  }
+  .event-badge.superchat { background: rgba(255,215,0,0.3); color: #FFD700; }
+  .event-badge.gift { background: rgba(255,105,180,0.3); color: #FF69B4; }
+  .event-badge.cheers { background: rgba(0,191,255,0.3); color: #00BFFF; }
+  .level-badge {
+    font-size: 9px; font-weight: 700; padding: 1px 6px; border-radius: 9999px;
+    background: linear-gradient(to right, rgba(254,44,85,0.4), rgba(37,244,238,0.4));
+    color: #fff;
+  }
+  .gift-info { margin-left: 4px; color: #FF69B4; font-weight: 600; }
+  #status { position: fixed; top: 8px; right: 8px; background: rgba(0,0,0,0.5); color: #999; padding: 4px 12px; border-radius: 9999px; font-size: 11px; font-weight: 600; border: 1px solid rgba(255,255,255,0.1); }
+</style>
+</head>
+<body>
+<div id="status">Connecting...</div>
+<div id="chat-feed"></div>
+
+<script>
+const feed = document.getElementById('chat-feed');
+const status = document.getElementById('status');
+const MAX_VISIBLE = 8;
+const FADE_DURATION = 12000;
+
+const PLATFORM_META = {
+  tiktok:  { label: 'TikTok',  icon: '\u266A', accentA: '#FE2C55', accentB: '#25F4EE', darkText: false },
+  youtube: { label: 'YouTube', icon: '\u25B6', accentA: '#FF0033', accentB: '#FF0033', darkText: false },
+  twitch:  { label: 'Twitch',  icon: '\u25C6', accentA: '#9146FF', accentB: '#9146FF', darkText: false },
+  kick:    { label: 'Kick',    icon: 'K',      accentA: '#53FC18', accentB: '#53FC18', darkText: true },
+};
+
+function connect() {
+  const ws = new WebSocket(`ws://${location.host}`);
+  ws.onopen = () => { status.textContent = 'Connected'; status.style.color = '#4ade80'; };
+  ws.onclose = () => { status.textContent = 'Disconnected'; status.style.color = '#f87171'; setTimeout(connect, 3000); };
+  ws.onerror = () => { status.textContent = 'Error'; status.style.color = '#f87171'; };
+  ws.onmessage = (evt) => {
+    try {
+      const parsed = JSON.parse(evt.data);
+      if (parsed.type === 'settings') return;
+      if (parsed.type === 'messages' && Array.isArray(parsed.data)) {
+        const msgs = parsed.data;
+        const currentIds = new Set([...feed.children].map(el => el.dataset.id));
+        const fresh = msgs.filter(m => !currentIds.has(m.id));
+        fresh.slice(-MAX_VISIBLE).forEach(addChatMessage);
+      }
+    } catch {}
+  };
+}
+
+function addChatMessage(msg) {
+  const meta = PLATFORM_META[msg.platform] || { label: msg.platform, icon: '\u2022', accentA: '#666', accentB: '#666', darkText: false };
+  const el = document.createElement('div');
+  el.dataset.id = msg.id;
+
+  let classes = 'msg';
+  if (msg.eventType === 'superchat') classes += ' event-superchat';
+  else if (msg.eventType === 'gift') classes += ' event-gift';
+  else if (msg.eventType === 'cheers') classes += ' event-cheers';
+  el.className = classes;
+  el.style.borderLeftColor = meta.accentA;
+
+  let eventBadge = '';
+  if (msg.eventType && msg.eventType !== 'chat') {
+    const cls = msg.eventType === 'superchat' ? 'superchat' : msg.eventType === 'gift' ? 'gift' : 'cheers';
+    const label = msg.eventType === 'superchat' ? '\u2B50 Superchat' : msg.eventType === 'gift' ? '\uD83C\uDF81 Gift' : '\uD83C\uDF89 Cheers';
+    eventBadge = `<span class="event-badge ${cls}">${label}</span>`;
+  }
+
+  let levelBadge = '';
+  if (msg.platform === 'tiktok' && msg.extra && msg.extra.level > 0) {
+    levelBadge = `<span class="level-badge">Lv.${msg.extra.level}</span>`;
+  }
+
+  let giftInfo = '';
+  if (msg.platform === 'tiktok' && msg.extra && msg.extra.giftName) {
+    giftInfo = `<span class="gift-info">${msg.extra.giftCount > 1 ? msg.extra.giftCount + 'x ' : ''}${msg.extra.giftName}${msg.extra.diamondCount > 0 ? ' \uD83D\uDC8E' + msg.extra.diamondCount : ''}</span>`;
+  }
+
+  const avatarHtml = msg.avatar ? `<img src="${msg.avatar}" alt="">` : meta.icon;
+
+  el.innerHTML = `
+    <div class="icon" style="background: linear-gradient(135deg, ${meta.accentA}, ${meta.accentB})">${avatarHtml}</div>
+    <div class="body">
+      <div class="top-row">
+        <span class="platform-tag ${meta.darkText ? 'dark-text' : ''}" style="background: linear-gradient(135deg, ${meta.accentA}, ${meta.accentB})">${meta.label}</span>
+        ${eventBadge}
+        ${levelBadge}
+        <span class="username">${escapeHtml(msg.username)}</span>
+      </div>
+      <div class="comment">${escapeHtml(msg.message)}${giftInfo}</div>
+    </div>
+  `;
+
+  feed.appendChild(el);
+  while (feed.children.length > MAX_VISIBLE) feed.removeChild(feed.firstChild);
+  setTimeout(() => { if (el.parentNode) el.remove(); }, FADE_DURATION);
+  feed.scrollTop = feed.scrollHeight;
+}
+
+function escapeHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s || '';
+  return d.innerHTML;
+}
+
+connect();
+</script>
+</body>
+</html>

@@ -1,5 +1,7 @@
 import { create } from 'zustand'
 import { ChatMessage, ConnectionStatus } from '@shared/types'
+import { shouldFilterMessage } from '../filters/chatFilter'
+import { useSettingsStore } from './settingsStore'
 
 interface ConnectionState {
   status: ConnectionStatus;
@@ -35,6 +37,10 @@ export const useChatStore = create<ChatStore>((set) => ({
   })),
   
   addMessage: (msg) => {
+    // Check filters before adding
+    const settings = useSettingsStore.getState().settings;
+    if (shouldFilterMessage(msg, settings)) return;
+
     set((state) => {
       const newMessages = [...state.messages, msg];
       // Keep max messages in store to avoid memory leak
@@ -42,7 +48,7 @@ export const useChatStore = create<ChatStore>((set) => ({
         newMessages.shift();
       }
       
-      // Broadcast only to overlay window (not self)
+      // Broadcast to overlay window and OBS
       // @ts-ignore
       if (window.api) {
         // @ts-ignore

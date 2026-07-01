@@ -25,6 +25,7 @@
     "react-router-dom": "^6.28.0",
     "tiktok-live-connector": "^2.4.0",
     "tmi.js": "^1.8.5",
+    "utf-8-validate": "^6.0.6",
     "zustand": "^5.0.1"
   },
   "devDependencies": {
@@ -42,6 +43,7 @@
     "vite": "^5.4.11"
   },
   "allowScripts": {
-    "bufferutil@4.1.0": true
+    "bufferutil@4.1.0": true,
+    "utf-8-validate@6.0.6": true
   }
 }

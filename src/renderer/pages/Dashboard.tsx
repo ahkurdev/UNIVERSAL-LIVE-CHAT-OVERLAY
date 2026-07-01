@@ -75,14 +75,7 @@ export function Dashboard() {
   const [kickError, setKickError] = useState('');
 
   useEffect(() => {
-    init().then(() => {
-      // Load saved channels after settings init
-      const saved = settings.savedChannels || {};
-      if (saved.twitch) setTwitchChannel(saved.twitch);
-      if (saved.youtube) setYoutubeChannel(saved.youtube);
-      if (saved.tiktok) setTiktokChannel(saved.tiktok);
-      if (saved.kick) setKickChannel(saved.kick);
-    });
+    init();
 
     mockConnector.onConnected(() => setConnectionStatus('mock', 'connected'));
     mockConnector.onDisconnected(() => setConnectionStatus('mock', 'idle'));
@@ -115,6 +108,15 @@ export function Dashboard() {
     kickConnector.onMessage((msg) => addMessage(msg));
   }, []);
 
+  // Load saved channels when settings change
+  useEffect(() => {
+    const saved = settings.savedChannels;
+    if (saved?.twitch) setTwitchChannel(saved.twitch);
+    if (saved?.youtube) setYoutubeChannel(saved.youtube);
+    if (saved?.tiktok) setTiktokChannel(saved.tiktok);
+    if (saved?.kick) setKickChannel(saved.kick);
+  }, [settings.savedChannels]);
+
   useEffect(() => {
     if (autoScrollRef.current && chatEndRef.current) {
       chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -141,8 +143,8 @@ export function Dashboard() {
       setTwitchError('');
       try {
         await twitchConnector.connect(twitchChannel.trim());
-        // Save channel
-        setSetting('savedChannels', { ...settings.savedChannels, twitch: twitchChannel.trim() });
+        const current = useSettingsStore.getState().settings.savedChannels || {};
+        setSetting('savedChannels', { ...current, twitch: twitchChannel.trim() });
       }
       catch (err: any) { setTwitchError(err.message || 'Connection failed'); }
     }
@@ -153,7 +155,11 @@ export function Dashboard() {
     else {
       if (!youtubeChannel.trim()) return;
       setConnectionStatus('youtube', 'connecting'); setYoutubeError('');
-      try { await youtubeConnector.connect(youtubeChannel.trim()); }
+      try {
+        await youtubeConnector.connect(youtubeChannel.trim());
+        const current = useSettingsStore.getState().settings.savedChannels || {};
+        setSetting('savedChannels', { ...current, youtube: youtubeChannel.trim() });
+      }
       catch (err: any) { setYoutubeError(err.message); }
     }
   }, [youtubeStatus, youtubeChannel]);
@@ -163,7 +169,11 @@ export function Dashboard() {
     else {
       if (!tiktokChannel.trim()) return;
       setConnectionStatus('tiktok', 'connecting'); setTiktokError('');
-      try { await tiktokConnector.connect(tiktokChannel.trim()); }
+      try {
+        await tiktokConnector.connect(tiktokChannel.trim());
+        const current = useSettingsStore.getState().settings.savedChannels || {};
+        setSetting('savedChannels', { ...current, tiktok: tiktokChannel.trim() });
+      }
       catch (err: any) { setTiktokError(err.message); }
     }
   }, [tiktokStatus, tiktokChannel]);

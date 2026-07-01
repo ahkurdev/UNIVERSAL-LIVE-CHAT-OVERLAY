@@ -31,7 +31,8 @@ interface SettingField {
 
 const SETTINGS: SettingField[] = [
   { key: 'language', label: 'Language', type: 'select', options: [{ value: 'en', label: 'English' }, { value: 'id', label: 'Bahasa Indonesia' }], category: 'general' },
-  { key: 'youtubeApiKey', label: 'YouTube API Key', type: 'text', placeholder: 'AIzaSy...', description: 'Required for YouTube live chat. Get from Google Cloud Console → YouTube Data API v3', category: 'general' },
+  { key: 'youtubeApiKey', label: 'YouTube API Key', type: 'text', placeholder: 'AIzaSy...', description: 'Required for YouTube live chat. Get from Google Cloud Console', category: 'general' },
+  { key: 'streamMode', label: 'Stream Mode (F9)', type: 'toggle', description: 'F9 to toggle overlay visibility', category: 'general' },
   { key: 'maxMessages', label: 'Max Stored Messages', type: 'number', min: 50, max: 1000, category: 'general' },
 
   { key: 'isLocked', label: 'Lock Position', type: 'toggle', category: 'overlay' },

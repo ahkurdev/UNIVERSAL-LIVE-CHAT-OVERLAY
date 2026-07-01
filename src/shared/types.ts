@@ -30,7 +30,8 @@ export interface AppSettings {
   // General
   language: string;
   youtubeApiKey: string;
-  savedChannels: Record<string, string>; // { twitch: 'channel', youtube: 'url', tiktok: '@user', kick: 'slug' }
+  savedChannels: Record<string, string>;
+  streamMode: boolean; // { twitch: 'channel', youtube: 'url', tiktok: '@user', kick: 'slug' }
   
   // Overlay
   isLocked: boolean;

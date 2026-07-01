@@ -12,6 +12,7 @@ export const store = new Store<StoreSchema>({
       language: 'en',
       youtubeApiKey: '',
       savedChannels: {},
+  streamMode: false,
       isLocked: true,
       opacity: 100,
       scale: 1.0,

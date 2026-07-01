@@ -15,6 +15,7 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
     language: 'en',
     youtubeApiKey: '',
     savedChannels: {},
+  streamMode: false,
     isLocked: true,
     opacity: 100,
     scale: 1.0,

@@ -16,6 +16,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   language: 'en',
   youtubeApiKey: '',
   savedChannels: {},
+  streamMode: false,
   isLocked: false,
   opacity: 100,
   scale: 1,
@@ -46,6 +47,7 @@ const DEFAULT_SETTINGS: AppSettings = {
 export function Overlay() {
   const [displayMessages, setDisplayMessages] = useState<ChatMessage[]>([]);
   const { settings, init } = useSettingsStore();
+  const [hidden, setHidden] = useState(false);
   const currentSettings = { ...DEFAULT_SETTINGS, ...settings };
 
   // Refs for settings used in IPC callbacks (avoid stale closure)
@@ -122,6 +124,18 @@ export function Overlay() {
     }
   }, [settings.isLocked]);
 
+  // Hotkey: F9 toggle stream mode (hide/show overlay)
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'F9') {
+        e.preventDefault();
+        setHidden(v => !v);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
+
   const getMeta = (platform: string) => {
     return PLATFORM_META[platform] || { label: platform, icon: '•', accentA: '#666', accentB: '#666', darkText: false };
   };
@@ -156,14 +170,23 @@ export function Overlay() {
         </>
       )}
 
-      {displayMessages.length === 0 && (
+      {displayMessages.length === 0 && !hidden && (
         <div className="absolute top-4 right-4 bg-black/50 text-white/50 px-3 py-1 rounded-full text-xs font-bold border border-white/10 z-30 pointer-events-none">
           Overlay Active
         </div>
       )}
 
+      {/* Stream mode / hidden indicator */}
+      {hidden && (
+        <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
+          <div className="bg-black/60 text-gray-500 px-4 py-2 rounded-full text-xs font-bold border border-gray-700/30">
+            🔴 Stream Mode — Press F9 to show
+          </div>
+        </div>
+      )}
+
       <div
-        className="absolute bottom-6 left-6 z-10"
+        className={`absolute bottom-6 left-6 z-10 transition-all duration-300 ${hidden ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}
         style={{
           opacity: currentSettings.opacity / 100,
           transform: `scale(${currentSettings.scale})`,

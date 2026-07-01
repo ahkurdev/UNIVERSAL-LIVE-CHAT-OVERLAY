@@ -42,7 +42,7 @@ export async function tiktokConnect(username: string): Promise<void> {
 
     // Important events only - skip high-frequency noise events
     const importantEvents = [
-      'chat', 'gift', 'member', 'social', 'envelope',
+      'chat', 'gift', 'member', 'like', 'social', 'envelope',
       'follow', 'share', 'subNotify', 'superFan', 'superFanJoin',
       'liveIntro', 'questionNew',
     ];

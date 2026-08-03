@@ -11,6 +11,8 @@
     "dev": "electron-vite dev",
     "build": "npm run typecheck && electron-vite build",
     "preview": "electron-vite preview",
+    "test": "node --test",
+    "verify:electron": "node scripts/verify-electron.cjs",
     "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
     "typecheck:web": "tsc --noEmit -p tsconfig.web.json --composite false",
     "typecheck": "npm run typecheck:node && npm run typecheck:web"
@@ -49,6 +51,8 @@
   },
   "allowScripts": {
     "bufferutil@4.1.0": true,
+    "electron@42.5.1": true,
+    "esbuild@0.21.5": true,
     "utf-8-validate@6.0.6": true
   }
 }

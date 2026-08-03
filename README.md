@@ -17,7 +17,7 @@ Download dan install **Node.js LTS** dari: https://nodejs.org
 
 Cek berhasil:
 ```
-node --version   # harus muncul angka kaya v20.x.x
+node --version   # gunakan Node.js LTS 22.12 atau lebih baru
 ```
 
 ### 2. Download Aplikasi
@@ -30,10 +30,16 @@ Atau klik **Code → Download ZIP**, extract.
 ### 3. Setup (sekali doang)
 Klik 2x file **`setup.bat`** — nanti otomatis install semua yang dibutuhkan.
 
+`setup.bat` juga memeriksa apakah `electron.exe` benar-benar selesai didownload. Jika
+instalasi Electron tidak lengkap, setup akan memperbaikinya sebelum menampilkan pesan
+berhasil.
+
 Atau manual:
 ```
 cd UNIVERSAL-LIVE-CHAT-OVERLAY-
 npm install
+node -e "require('electron')"
+npm run verify:electron
 ```
 
 ### 4. Jalankan
@@ -43,6 +49,21 @@ Atau:
 ```
 npm start
 ```
+
+`start.bat` menjalankan pemeriksaan yang sama dan mencoba memulihkan binary Electron
+secara otomatis. Jadi error `Electron uninstall` tidak dibiarkan muncul tanpa penjelasan.
+
+### Troubleshooting Instalasi
+
+Jika setup gagal mendownload Electron:
+
+1. Pastikan koneksi internet aktif dan GitHub/download Electron tidak diblokir antivirus,
+   firewall, VPN, atau proxy.
+2. Jalankan `setup.bat` lagi. Script aman dijalankan ulang.
+3. Jika masih gagal, hapus folder `node_modules` secara manual lalu jalankan `setup.bat`.
+
+Jangan gunakan `npm install --ignore-scripts`, karena project membutuhkan install script
+untuk menyiapkan dependency build seperti esbuild.
 
 ---
 

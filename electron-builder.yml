@@ -1,0 +1,28 @@
+appId: com.universal.livechatoverlay
+productName: Universal Live Chat Overlay
+directories:
+  output: dist
+  buildResources: build
+files:
+  - out/**/*
+  - node_modules/**/*
+  - package.json
+asar: true
+asarUnpack:
+  - resources/**
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+    - target: portable
+      arch:
+        - x64
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: always
+  createStartMenuShortcut: true
+  shortcutName: Universal Live Chat Overlay
+portable:
+  artifactName: Universal-Live-Chat-Overlay-Portable-${version}.${ext}

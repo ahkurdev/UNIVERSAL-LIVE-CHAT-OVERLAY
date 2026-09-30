@@ -15,6 +15,14 @@ import {
   obsServerSetStatusCb, obsServerIsRunning, obsServerGetPort
 } from './obs-server';
 
+// --- Low-RAM & Low-CPU Optimization Switches ---
+app.commandLine.appendSwitch('disable-renderer-backgrounding');
+app.commandLine.appendSwitch('disable-backgrounding-occluded-windows');
+app.commandLine.appendSwitch('disable-breakpad');
+app.commandLine.appendSwitch('disable-component-update');
+app.commandLine.appendSwitch('enable-gpu-rasterization');
+app.commandLine.appendSwitch('enable-zero-copy');
+
 let dashboardWindow: BrowserWindow | null;
 let overlayWindow: BrowserWindow | null;
 
@@ -119,6 +127,7 @@ function createOverlayWindow(): void {
       webPreferences: {
         preload: join(__dirname, '../preload/index.mjs'),
         sandbox: false,
+        backgroundThrottling: false,
       },
     });
 

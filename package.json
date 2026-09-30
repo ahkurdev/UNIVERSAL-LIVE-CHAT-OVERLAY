@@ -3,7 +3,11 @@
   "version": "1.0.0",
   "description": "Universal Live Chat Overlay — gabungan chat Twitch, YouTube, TikTok, Kick dalam satu overlay transparan untuk streamer",
   "main": "out/main/index.js",
-  "author": "Allan4u",
+  "author": "ahkurdev <ah.kurniawan27@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ahkurdev/UNIVERSAL-LIVE-CHAT-OVERLAY.git"
+  },
   "license": "MIT",
   "type": "module",
   "scripts": {

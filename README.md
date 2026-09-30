@@ -23,7 +23,7 @@ node --version   # gunakan Node.js LTS 22.12 atau lebih baru
 ### 2. Download Aplikasi
 Download repository ini sebagai ZIP atau clone:
 ```
-git clone https://github.com/Allan4u/UNIVERSAL-LIVE-CHAT-OVERLAY-.git
+git clone https://github.com/ahkurdev/UNIVERSAL-LIVE-CHAT-OVERLAY.git
 ```
 Atau klik **Code → Download ZIP**, extract.
 
@@ -36,19 +36,28 @@ berhasil.
 
 Atau manual:
 ```
-cd UNIVERSAL-LIVE-CHAT-OVERLAY-
+cd UNIVERSAL-LIVE-CHAT-OVERLAY
 npm install
 node -e "require('electron')"
 npm run verify:electron
 ```
 
-### 4. Jalankan
+### 4. Jalankan (Mode Pengembangan)
 Klik 2x file **`start.bat`**
 
 Atau:
 ```
 npm start
 ```
+
+### 5. Build Jadi Aplikasi Mandiri (.exe)
+Klik 2x file **`build-exe.bat`**
+
+Atau:
+```
+npm run dist
+```
+File installer (`Setup 1.0.0.exe`) dan file portabel (`Portable-1.0.0.exe`) akan langsung tercipta di folder **`dist/`**.
 
 `start.bat` menjalankan pemeriksaan yang sama dan mencoba memulihkan binary Electron
 secara otomatis. Jadi error `Electron uninstall` tidak dibiarkan muncul tanpa penjelasan.

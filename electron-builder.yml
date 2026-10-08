@@ -1,15 +1,17 @@
-appId: com.universal.livechatoverlay
+appId: com.ahkurdev.universallivechatoverlay
 productName: Universal Live Chat Overlay
+copyright: Copyright © 2026 ahkurdev
+
 directories:
   output: dist
   buildResources: build
+
 files:
   - out/**/*
-  - node_modules/**/*
+  - build/icon.ico
+  - build/icon.png
   - package.json
-asar: true
-asarUnpack:
-  - resources/**
+
 win:
   target:
     - target: nsis
@@ -18,11 +20,21 @@ win:
     - target: portable
       arch:
         - x64
+  icon: build/icon.ico
+  artifactName: "${productName}-Setup-${version}.${ext}"
+
 nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true
+  perMachine: false
   createDesktopShortcut: always
   createStartMenuShortcut: true
-  shortcutName: Universal Live Chat Overlay
+  shortcutName: "Universal Live Chat Overlay"
+  uninstallDisplayName: "Universal Live Chat Overlay"
+  installerIcon: build/icon.ico
+  uninstallerIcon: build/icon.ico
+  installerHeaderIcon: build/icon.ico
+  runAfterFinish: true
+
 portable:
-  artifactName: Universal-Live-Chat-Overlay-Portable-${version}.${ext}
+  artifactName: "Universal-Live-Chat-Overlay-Portable-${version}.${ext}"

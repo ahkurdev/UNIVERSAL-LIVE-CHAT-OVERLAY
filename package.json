@@ -15,7 +15,7 @@
     "dev": "electron-vite dev",
     "build": "npm run typecheck && electron-vite build",
     "build:win": "npm run build && electron-builder --win",
-    "dist": "npm run build && electron-builder --win",
+    "dist": "npm run build && electron-builder",
     "preview": "electron-vite preview",
     "test": "node --test",
     "verify:electron": "node scripts/verify-electron.cjs",

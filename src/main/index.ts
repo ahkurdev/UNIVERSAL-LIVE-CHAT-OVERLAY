@@ -102,6 +102,15 @@ function createDashboardWindow(): void {
     return { action: 'deny' };
   });
 
+  dashboardWindow.on('closed', () => {
+    dashboardWindow = null;
+    if (overlayWindow && !overlayWindow.isDestroyed()) {
+      overlayWindow.close();
+      overlayWindow = null;
+    }
+    app.quit();
+  });
+
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
     dashboardWindow.loadURL(process.env['ELECTRON_RENDERER_URL']);
   } else {
@@ -168,6 +177,10 @@ function createOverlayWindow(): void {
         overlayWindow?.webContents.send('overlay-bounds-update', newBounds);
       }
     }
+  });
+
+  overlayWindow.on('closed', () => {
+    overlayWindow = null;
   });
 
 

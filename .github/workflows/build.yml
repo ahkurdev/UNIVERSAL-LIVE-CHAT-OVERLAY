@@ -24,7 +24,9 @@ jobs:
         run: npm ci
 
       - name: Build and Package Windows Executables
-        run: npm run dist
+        run: |
+          npm run build
+          npx electron-builder --win --publish never
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4

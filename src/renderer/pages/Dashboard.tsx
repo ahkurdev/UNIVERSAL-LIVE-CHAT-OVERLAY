@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useChatStore } from '../store/chatStore'
 import { useSettingsStore } from '../store/settingsStore'
-import { BarChart3, Settings, MessageCircle } from 'lucide-react'
+import { BarChart3, Settings, MessageCircle, Sparkles } from 'lucide-react'
 import { MockConnector } from '../connectors/base/mock'
 import { TwitchConnector } from '../connectors/twitch'
 import { YouTubeConnector } from '../connectors/youtube'
@@ -17,21 +17,28 @@ const tiktokConnector = new TikTokConnector();
 const kickConnector = new KickConnector();
 
 function ConnectionRow({ label, status, connectedColor, onToggle, disabled, children }: any) {
+  const statusLabel = status === 'connected' ? 'Live' :
+    status === 'connecting' ? 'Connecting…' :
+    status === 'error' ? 'Failed' : 'Offline';
+  const statusDotColor = status === 'connected' ? connectedColor :
+    status === 'connecting' ? '#eab308' :
+    status === 'error' ? '#ef4444' : '#4b5563';
   return (
     <div className="bg-[#25252e] rounded-xl border border-gray-800/50 p-4 space-y-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
-            status === 'connected' ? `shadow-[0_0_8px_currentColor]` :
-            status === 'connecting' ? 'bg-yellow-500 animate-pulse' :
-            status === 'error' ? 'bg-red-500' : 'bg-gray-600'
-          }`}
-            style={{ color: status === 'connected' ? connectedColor : 'transparent',
-                     background: status === 'connected' ? connectedColor : undefined }}
+          <div className="w-2.5 h-2.5 rounded-full transition-all duration-300"
+            style={{ background: statusDotColor,
+                     boxShadow: status === 'connected' ? `0 0 8px ${connectedColor}` : 'none' }}
           />
           <span className="text-sm font-semibold text-gray-200">{label}</span>
+          <span className={`text-[10px] font-bold uppercase tracking-wider ${
+            status === 'connected' ? 'text-green-400' :
+            status === 'connecting' ? 'text-yellow-400' :
+            status === 'error' ? 'text-red-400' : 'text-gray-500'
+          }`}>{statusLabel}</span>
         </div>
-        <button onClick={onToggle} disabled={disabled}
+        <button onClick={onToggle} disabled={disabled || status === 'connecting'}
           className={`px-3.5 py-1.5 rounded-lg font-bold text-xs transition-all ${
             status === 'connected'
               ? 'bg-red-500/15 text-red-400 hover:bg-red-500/25 border border-red-500/20'
@@ -45,7 +52,7 @@ function ConnectionRow({ label, status, connectedColor, onToggle, disabled, chil
           } : {}}
         >
           {status === 'connected' ? 'Disconnect' :
-           status === 'connecting' ? 'Connecting..' : 'Connect'}
+           status === 'connecting' ? 'Connecting…' : 'Connect'}
         </button>
       </div>
       {children}
@@ -63,6 +70,7 @@ export function Dashboard() {
   const youtubeStatus = connections['youtube']?.status || 'idle';
   const tiktokStatus = connections['tiktok']?.status || 'idle';
   const kickStatus = connections['kick']?.status || 'idle';
+  const anyConnected = [twitchStatus, youtubeStatus, tiktokStatus, kickStatus].includes('connected');
   const chatEndRef = useRef<HTMLDivElement>(null);
   const autoScrollRef = useRef(true);
 
@@ -74,6 +82,7 @@ export function Dashboard() {
   const [tiktokError, setTiktokError] = useState('');
   const [kickChannel, setKickChannel] = useState('');
   const [kickError, setKickError] = useState('');
+  const [activeTab, setActiveTab] = useState<'connect' | 'display'>('connect');
 
   const dashboardMessages = messages.slice(-(settings.dashboardMaxMessages || 100));
 
@@ -213,91 +222,152 @@ export function Dashboard() {
           </div>
         </div>
 
-        <div className="px-5 py-5 space-y-4">
-          <h2 className="text-[11px] font-bold uppercase tracking-[1px] text-gray-500">Overlay Settings</h2>
-          <div className="bg-[#25252e] rounded-xl border border-gray-800/50 overflow-hidden divide-y divide-gray-800/30">
-            <div className="flex items-center justify-between px-4 py-3">
-              <span className="text-sm font-semibold text-gray-300">Lock Position</span>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" className="sr-only peer"
-                  checked={settings.isLocked}
-                  onChange={() => setSetting('isLocked', !settings.isLocked)} />
-                <div className="w-10 h-5 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[3px] after:start-[3px] after:bg-white after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-indigo-600"></div>
-              </label>
-            </div>
-            {(['maxChats', 'opacity'] as const).map(key => (
-              <div key={key} className="px-4 py-3">
-                <div className="flex justify-between mb-1.5">
-                  <span className="text-xs font-semibold text-gray-400">{key === 'maxChats' ? 'Max Chats' : 'Opacity'}</span>
-                  <span className="text-xs font-bold text-gray-300">{settings[key]}{key === 'opacity' ? '%' : ''}</span>
-                </div>
-                <input type="range" min={key === 'maxChats' ? 1 : 10} max={key === 'maxChats' ? 15 : 100}
-                  value={settings[key]}
-                  onChange={(e) => setSetting(key, parseInt(e.target.value))}
-                  className="w-full accent-indigo-500 h-1.5" />
-              </div>
-            ))}
-            <div className="px-4 py-3">
-              <div className="flex justify-between mb-1.5">
-                <span className="text-xs font-semibold text-gray-400">Scale</span>
-                <span className="text-xs font-bold text-gray-300">{settings.scale.toFixed(1)}x</span>
-              </div>
-              <input type="range" min="0.5" max="2.0" step="0.1" value={settings.scale}
-                onChange={(e) => setSetting('scale', parseFloat(e.target.value))}
-                className="w-full accent-indigo-500 h-1.5" />
-            </div>
+        <div className="px-5 pb-4 pt-2">
+          {/* Tabs keep each screen to one job: connecting vs. adjusting the overlay */}
+          <div className="flex bg-[#15151c] rounded-lg p-1 border border-gray-800/50">
+            <button onClick={() => setActiveTab('connect')}
+              className={`flex-1 py-1.5 rounded-md text-xs font-bold transition-all ${
+                activeTab === 'connect' ? 'bg-indigo-600 text-white shadow' : 'text-gray-500 hover:text-gray-300'}`}>
+              Connect
+            </button>
+            <button onClick={() => setActiveTab('display')}
+              className={`flex-1 py-1.5 rounded-md text-xs font-bold transition-all ${
+                activeTab === 'display' ? 'bg-indigo-600 text-white shadow' : 'text-gray-500 hover:text-gray-300'}`}>
+              Tampilan
+            </button>
           </div>
         </div>
 
-        <div className="px-5 pb-5 space-y-3">
-          <h2 className="text-[11px] font-bold uppercase tracking-[1px] text-gray-500">Connections</h2>
+        {activeTab === 'connect' && !anyConnected && (
+          <div className="px-5 pb-4">
+            <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-xl p-3.5 flex items-start gap-3">
+              <Sparkles size={16} className="text-indigo-400 mt-0.5 shrink-0" />
+              <div className="text-xs text-gray-400 leading-relaxed">
+                <span className="font-bold text-indigo-300">Mulai di sini:</span> ketik nama channel Anda di platform di bawah, lalu tekan <span className="text-gray-200 font-semibold">Connect</span>. Bingung? Klik <span className="text-gray-200 font-semibold">Data Contoh</span> untuk lihat hasilnya dulu.
+              </div>
+            </div>
+          </div>
+        )}
 
-          <ConnectionRow label="Mock Data" status={mockStatus} connectedColor="#22c55e"
-            onToggle={toggleMockConnection} disabled={false} />
+        {activeTab === 'display' && (
+          <div className="px-5 py-4 space-y-4">
+            <h2 className="text-[11px] font-bold uppercase tracking-[1px] text-gray-500">Template Overlay</h2>
+            <div className="grid grid-cols-2 gap-2">
+              {([
+                ['indofinity', 'IndoFinity', '🍊'],
+                ['minimal', 'Minimalis', '▫️'],
+                ['neon', 'Neon Glow', '💜'],
+                ['bubble', 'Bubble', '🫧'],
+                ['game', 'Klasik Game', '🎮'],
+              ] as const).map(([id, label, emoji]) => (
+                <button key={id}
+                  onClick={() => setSetting('overlayTemplate', id)}
+                  className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-xs font-bold transition-all border ${
+                    (settings.overlayTemplate || 'indofinity') === id
+                      ? 'bg-indigo-600 text-white border-indigo-500 shadow-lg'
+                      : 'bg-[#25252e] text-gray-400 border-gray-800/50 hover:border-gray-600 hover:text-gray-200'
+                  }`}>
+                  <span>{emoji}</span>{label}
+                </button>
+              ))}
+            </div>
+
+            <h2 className="text-[11px] font-bold uppercase tracking-[1px] text-gray-500 pt-1">Pengaturan Overlay</h2>
+            <div className="bg-[#25252e] rounded-xl border border-gray-800/50 overflow-hidden divide-y divide-gray-800/30">
+              <div className="flex items-center justify-between px-4 py-3">
+                <div>
+                  <span className="text-sm font-semibold text-gray-300">Kunci Posisi</span>
+                  <p className="text-[11px] text-gray-500 mt-0.5">Chat bisa diklik tembus saat streaming</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                  <input type="checkbox" className="sr-only peer"
+                    checked={settings.isLocked}
+                    onChange={() => setSetting('isLocked', !settings.isLocked)} />
+                  <div className="w-10 h-5 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[3px] after:start-[3px] after:bg-white after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-indigo-600"></div>
+                </label>
+              </div>
+              {(['maxChats', 'opacity'] as const).map(key => (
+                <div key={key} className="px-4 py-3">
+                  <div className="flex justify-between mb-1.5">
+                    <span className="text-xs font-semibold text-gray-400">{key === 'maxChats' ? 'Jumlah Chat' : 'Transparansi'}</span>
+                    <span className="text-xs font-bold text-gray-300">{settings[key]}{key === 'opacity' ? '%' : ''}</span>
+                  </div>
+                  <input type="range" min={key === 'maxChats' ? 1 : 10} max={key === 'maxChats' ? 15 : 100}
+                    value={settings[key]}
+                    onChange={(e) => setSetting(key, parseInt(e.target.value))}
+                    className="w-full accent-indigo-500 h-1.5" />
+                </div>
+              ))}
+              <div className="px-4 py-3">
+                <div className="flex justify-between mb-1.5">
+                  <span className="text-xs font-semibold text-gray-400">Ukuran</span>
+                  <span className="text-xs font-bold text-gray-300">{settings.scale.toFixed(1)}x</span>
+                </div>
+                <input type="range" min="0.5" max="2.0" step="0.1" value={settings.scale}
+                  onChange={(e) => setSetting('scale', parseFloat(e.target.value))}
+                  className="w-full accent-indigo-500 h-1.5" />
+              </div>
+            </div>
+            <p className="text-[11px] text-gray-500 px-1 leading-relaxed">Drag overlay (jendela transparan) ke posisi yang Anda mau, lalu aktifkan Kunci Posisi.</p>
+          </div>
+        )}
+
+        <div className={`px-5 pb-5 space-y-3 ${activeTab === 'connect' ? '' : 'hidden'}`}>
+          <h2 className="text-[11px] font-bold uppercase tracking-[1px] text-gray-500">Platform</h2>
+
+          <button onClick={toggleMockConnection}
+            className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all border ${
+              mockStatus === 'connected'
+                ? 'bg-gray-800/60 text-gray-400 border-gray-700/50 hover:bg-gray-800'
+                : 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/25'
+            }`}>
+            <Sparkles size={15} />
+            {mockStatus === 'connected' ? 'Stop Data Contoh' : 'Coba Data Contoh'}
+          </button>
 
           <ConnectionRow label="Twitch" status={twitchStatus} connectedColor="#9146FF"
             onToggle={toggleTwitchConnection}
             disabled={!twitchChannel.trim() && twitchStatus !== 'connected'}>
-            <input type="text" placeholder="twitch channel name" value={twitchChannel}
+            <input type="text" placeholder="e.g. xqc (channel name)" value={twitchChannel}
               disabled={twitchStatus === 'connected'}
               onChange={(e) => setTwitchChannel(e.target.value.replace(/[^a-zA-Z0-9_]/g, ''))}
               className="w-full bg-[#15151c] border border-gray-700/60 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:border-[#9146FF] focus:ring-1 focus:ring-[#9146FF]/50 transition-all"
               onKeyDown={(e) => { if (e.key === 'Enter' && twitchChannel.trim()) toggleTwitchConnection(); }} />
             {twitchError && <div className="text-xs text-red-400 bg-red-500/10 rounded-lg px-3 py-2 border border-red-500/20">{twitchError}</div>}
-            {twitchStatus === 'idle' && !twitchError && <p className="text-[11px] text-gray-600">Connect to any live Twitch channel</p>}
+            {twitchStatus === 'idle' && !twitchError && <p className="text-[11px] text-gray-600">Ketik nama channel Twitch yang sedang live, lalu Connect</p>}
           </ConnectionRow>
 
           <ConnectionRow label="YouTube" status={youtubeStatus} connectedColor="#FF0033"
             onToggle={toggleYoutube} disabled={!youtubeChannel.trim() && youtubeStatus !== 'connected'}>
-            <input type="text" placeholder="channel name or video ID" value={youtubeChannel}
+            <input type="text" placeholder="URL live atau nama channel" value={youtubeChannel}
               disabled={youtubeStatus === 'connected'}
               onChange={(e) => setYoutubeChannel(e.target.value)}
               className="w-full bg-[#15151c] border border-gray-700/60 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:border-[#FF0033] focus:ring-1 focus:ring-[#FF0033]/50 transition-all"
               onKeyDown={(e) => { if (e.key === 'Enter' && youtubeChannel.trim()) toggleYoutube(); }} />
             {youtubeError && <div className="text-xs text-red-400 bg-red-500/10 rounded-lg px-3 py-2 border border-red-500/20">{youtubeError}</div>}
-            {youtubeStatus === 'idle' && !youtubeError && <p className="text-[11px] text-gray-600">Connect to a live YouTube stream</p>}
+            {youtubeStatus === 'idle' && !youtubeError && <p className="text-[11px] text-gray-600">Paste URL live (youtube.com/watch?v=...) atau nama channel</p>}
           </ConnectionRow>
 
           <ConnectionRow label="TikTok" status={tiktokStatus} connectedColor="#FE2C55"
             onToggle={toggleTiktok} disabled={!tiktokChannel.trim() && tiktokStatus !== 'connected'}>
-            <input type="text" placeholder="@username" value={tiktokChannel}
+            <input type="text" placeholder="@username (mis. @namaanda)" value={tiktokChannel}
               disabled={tiktokStatus === 'connected'}
               onChange={(e) => setTiktokChannel(e.target.value)}
               className="w-full bg-[#15151c] border border-gray-700/60 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:border-[#FE2C55] focus:ring-1 focus:ring-[#FE2C55]/50 transition-all"
               onKeyDown={(e) => { if (e.key === 'Enter' && tiktokChannel.trim()) toggleTiktok(); }} />
             {tiktokError && <div className="text-xs text-red-400 bg-red-500/10 rounded-lg px-3 py-2 border border-red-500/20">{tiktokError}</div>}
-            {tiktokStatus === 'idle' && !tiktokError && <p className="text-[11px] text-gray-600">Connect to a TikTok live stream</p>}
+            {tiktokStatus === 'idle' && !tiktokError && <p className="text-[11px] text-gray-600">Ketik @username TikTok Anda yang sedang live</p>}
           </ConnectionRow>
 
           <ConnectionRow label="Kick" status={kickStatus} connectedColor="#53FC18"
             onToggle={toggleKick} disabled={!kickChannel.trim() && kickStatus !== 'connected'}>
-            <input type="text" placeholder="channel slug" value={kickChannel}
+            <input type="text" placeholder="nama channel, mis. xqc" value={kickChannel}
               disabled={kickStatus === 'connected'}
               onChange={(e) => setKickChannel(e.target.value)}
               className="w-full bg-[#15151c] border border-gray-700/60 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:border-[#53FC18] focus:ring-1 focus:ring-[#53FC18]/50 transition-all"
               onKeyDown={(e) => { if (e.key === 'Enter' && kickChannel.trim()) toggleKick(); }} />
             {kickError && <div className="text-xs text-red-400 bg-red-500/10 rounded-lg px-3 py-2 border border-red-500/20">{kickError}</div>}
-            {kickStatus === 'idle' && !kickError && <p className="text-[11px] text-gray-600">Connect to a Kick channel</p>}
+            {kickStatus === 'idle' && !kickError && <p className="text-[11px] text-gray-600">Ketik nama channel Kick (bagian setelah kick.com/)</p>}
           </ConnectionRow>
         </div>
       </div>
@@ -326,24 +396,47 @@ export function Dashboard() {
           {dashboardMessages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-gray-600">
               <MessageCircle size={40} className="opacity-30 mb-3" />
-              <p className="text-sm italic">No messages yet</p>
-              <p className="text-xs mt-1 opacity-60">Connect Mock or a Twitch channel</p>
+              <p className="text-sm italic">Belum ada chat masuk</p>
+              <p className="text-xs mt-1 opacity-60">Connect platform di sidebar, atau</p>
+              <button onClick={toggleMockConnection}
+                className="mt-3 px-4 py-2 rounded-lg bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 text-xs font-bold hover:bg-emerald-500/25 transition-all">
+                Coba Data Contoh
+              </button>
             </div>
           ) : (
             <div className="space-y-2">
-              {dashboardMessages.map((msg) => (
-                <div key={msg.id}
-                  className="px-4 py-3 bg-[#1a1a22] rounded-xl border-l-[3px] border-gray-700 hover:bg-[#22222d] transition-colors text-sm flex items-start gap-4"
-                  style={{
-                    borderLeftColor: msg.platform === 'tiktok' ? '#FE2C55' :
-                      msg.platform === 'youtube' ? '#FF0033' :
-                      msg.platform === 'twitch' ? '#9146FF' : '#53FC18'
-                  }}>
-                  <span className="font-bold text-[10px] uppercase tracking-wider text-gray-500 w-14 shrink-0 mt-0.5">{msg.platform}</span>
-                  <span className="font-bold text-indigo-300/90 truncate max-w-[140px] shrink-0">{msg.username}</span>
-                  <span className="text-gray-300 break-words flex-1 min-w-0">{msg.message}</span>
-                </div>
-              ))}
+              {dashboardMessages.map((msg) => {
+                const accent = msg.platform === 'tiktok' ? '#FE2C55' :
+                  msg.platform === 'youtube' ? '#FF0033' :
+                  msg.platform === 'twitch' ? '#9146FF' : '#53FC18';
+                return (
+                  <div key={msg.id}
+                    className="px-4 py-3 bg-[#1a1a22] rounded-xl hover:bg-[#22222d] transition-colors text-sm flex items-start gap-3"
+                    style={{ borderLeft: `3px solid ${accent}` }}>
+                    {msg.avatar ? (
+                      <img src={msg.avatar} alt="" className="w-7 h-7 rounded-lg object-cover shrink-0 mt-0.5" />
+                    ) : (
+                      <div className="w-7 h-7 rounded-lg shrink-0 mt-0.5 flex items-center justify-center text-xs font-bold text-white"
+                        style={{ background: `linear-gradient(135deg, ${accent}, ${accent}99)` }}>
+                        {(msg.username || '?').charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-bold text-[10px] uppercase tracking-wider text-gray-500">{msg.platform}</span>
+                        {msg.eventType && msg.eventType !== 'chat' && (
+                          <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-300">
+                            {msg.eventType === 'superchat' ? '⭐ Superchat' :
+                             msg.eventType === 'gift' ? '🎁 Gift' : '🎉 ' + msg.eventType}
+                          </span>
+                        )}
+                        <span className="font-bold truncate max-w-[140px]" style={{ color: accent }}>{msg.username}</span>
+                      </div>
+                      <p className="text-gray-300 break-words mt-0.5">{msg.message}</p>
+                    </div>
+                  </div>
+                );
+              })}
               <div ref={chatEndRef} />
             </div>
           )}

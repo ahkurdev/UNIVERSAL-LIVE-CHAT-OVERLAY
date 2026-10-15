@@ -79,6 +79,9 @@ async function connectWithScrape(videoId: string): Promise<void> {
   }
 
   if (!continuation) {
+    // Detect YouTube's "chat disabled" / sign-in required responses so users get a real reason
+    const chatDisabled = html.match(/"text"\s*:\s*"([^"]*(?:nonaktif|disabled|chat is|turn off)[^"]*)"/i);
+    if (chatDisabled) throw new Error(`YouTube: ${chatDisabled[1]}`);
     throw new Error('No live chat continuation found. Stream may not be live.');
   }
 
@@ -88,8 +91,9 @@ async function connectWithScrape(videoId: string): Promise<void> {
 
 async function extractContinuationFromWatchPage(_videoId: string, html: string): Promise<string> {
   // Find ytInitialData JSON
-  const dataMatch = html.match(/window\["ytInitialData"\]\s*=\s*({[\s\S]*?});\s*(<\/script>|window)/);
-  const altMatch = dataMatch || html.match(/var\s+ytInitialData\s*=\s*({[\s\S]*?});\s*<\/script>/);
+  // Match both `var ytInitialData = {...}` and `window["ytInitialData"] = {...}` (YouTube alternates formats)
+  const altMatch = html.match(/window\["ytInitialData"\]\s*=\s*({[\s\S]*?});\s*<\/script>/) ||
+                   html.match(/var\s+ytInitialData\s*=\s*({[\s\S]*?});\s*<\/script>/);
   if (!altMatch) return '';
 
   try {
@@ -126,11 +130,18 @@ async function extractContinuationFromLiveChatPage(videoId: string): Promise<str
       if (km) scrapeApiKey = km[1];
     }
 
-    const dm = html.match(/ytInitialData\s*=\s*({[\s\S]*?});\s*<\/script>/);
+    const dm = html.match(/window\["ytInitialData"\]\s*=\s*({[\s\S]*?});\s*<\/script>/) ||
+               html.match(/var\s+ytInitialData\s*=\s*({[\s\S]*?});\s*<\/script>/);
     if (!dm) return '';
 
     const data = JSON.parse(dm[1]);
-    return findContinuation(data);
+    const token = findContinuation(data);
+    if (token) return token;
+
+    // Surface YouTube's reason (e.g. chat disabled, sign-in required)
+    const msg = data?.contents?.messageRenderer?.text?.runs?.[0]?.text;
+    if (msg) throw new Error(`YouTube: ${msg}`);
+    return '';
   } catch { return ''; }
 }
 

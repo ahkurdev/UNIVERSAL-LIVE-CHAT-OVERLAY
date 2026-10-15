@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { AppSettings, OverlayBounds } from '@shared/types'
+import { AppSettings, OverlayBounds, OverlayTemplate } from '@shared/types'
 
 // Define the shape of the store
 interface SettingsStore {
@@ -18,6 +18,7 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
     savedChannels: {},
   streamMode: false,
     isLocked: true,
+    overlayTemplate: 'indofinity' as OverlayTemplate,
     opacity: 100,
     scale: 1.0,
     maxChats: 8,

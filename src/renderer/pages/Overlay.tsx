@@ -1,5 +1,5 @@
 import { useEffect, useState, useLayoutEffect, useRef } from 'react'
-import { ChatMessage, AppSettings } from '@shared/types'
+import { ChatMessage, AppSettings, OverlayTemplate } from '@shared/types'
 import { useSettingsStore } from '../store/settingsStore'
 import { motion, AnimatePresence } from 'framer-motion'
 import '../index.css'
@@ -18,6 +18,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   savedChannels: {},
   streamMode: false,
   isLocked: false,
+  overlayTemplate: 'indofinity' as OverlayTemplate,
   opacity: 100,
   scale: 1,
   maxChats: 8,
@@ -136,6 +137,137 @@ export function Overlay() {
     return PLATFORM_META[platform] || { label: platform, icon: '•', accentA: '#666', accentB: '#666', darkText: false };
   };
 
+  // ===== 5 overlay templates =====
+  const renderMessage = (msg: ChatMessage) => {
+    const meta = getMeta(msg.platform);
+    const tpl: OverlayTemplate = currentSettings.overlayTemplate || 'indofinity';
+    const key = msg.id;
+    const eventLabel = msg.eventType && msg.eventType !== 'chat'
+      ? (msg.eventType === 'superchat' ? '⭐ Superchat' : msg.eventType === 'gift' ? '🎁 Gift' : '🎉 ' + msg.eventType)
+      : '';
+    const motionProps = {
+      key,
+      layout: true,
+      initial: { opacity: 0, x: -30, scale: 0.95 },
+      animate: { opacity: 1, x: 0, scale: 1 },
+      exit: { opacity: 0, x: 30, scale: 0.95, transition: { duration: 0.25, ease: 'easeIn' } },
+      transition: { type: 'spring', stiffness: 400, damping: 26, mass: 0.8 },
+    } as const;
+
+    const avatar = (size: string, rounded: string) => (
+      msg.avatar ? (
+        <img src={msg.avatar} alt="" className={`${size} ${rounded} object-cover shrink-0`} />
+      ) : (
+        <div className={`${size} ${rounded} shrink-0 flex items-center justify-center text-xs font-bold`}
+          style={{ background: tpl === 'bubble' ? accent : `linear-gradient(135deg, ${meta.accentA}, ${meta.accentB})`, color: meta.darkText ? '#0c0c10' : '#fff' }}>
+          {(msg.username || '?').charAt(0).toUpperCase()}
+        </div>
+      )
+    );
+    const accent = meta.accentA;
+    const bg = (currentSettings.messageBgOpacity || 55) / 100;
+    const platformTag = (textColor: string) => currentSettings.showPlatformTag !== false && (
+      <span className="text-[10px] font-bold tracking-[0.5px] uppercase px-1.5 py-0.5 rounded-md"
+        style={{ background: `linear-gradient(135deg, ${meta.accentA}, ${meta.accentB})`, color: textColor }}>
+        {meta.label}
+      </span>
+    );
+    const eventBadge = (cls: string) => eventLabel && (
+      <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded-md ${cls}`}>{eventLabel}</span>
+    );
+    const body = (nameColor: string, textColor: string) => (
+      <div className="flex flex-col min-w-0 flex-1">
+        <div className="flex items-center gap-2 flex-wrap">
+          {platformTag(meta.darkText ? '#0c0c10' : '#fff')}
+          {eventBadge('')}
+          <span className="font-bold truncate max-w-[200px]" style={{ color: nameColor }}>{msg.username}</span>
+        </div>
+        <div style={{ fontSize: `${currentSettings.fontSize || 13.5}px`, color: textColor }} className="leading-snug mt-1 break-words">
+          {msg.message}
+          {msg.platform === 'tiktok' && msg.extra?.giftName && (
+            <span className="ml-1 font-semibold" style={{ color: '#FF69B4' }}>
+              {msg.extra.giftCount > 1 && `${msg.extra.giftCount}x `}{msg.extra.giftName}
+              {msg.extra.diamondCount > 0 && ` 💎${msg.extra.diamondCount}`}
+            </span>
+          )}
+        </div>
+      </div>
+    );
+
+    if (tpl === 'minimal') {
+      // Minimalis: bar gelap polos tanpa avatar
+      return (
+        <motion.div {...motionProps}
+          className="flex items-center gap-3 px-4 py-2"
+          style={{ background: `rgba(10,10,14,${Math.max(bg, 0.5)})`, borderRadius: '8px' }}>
+          <span className="w-1 self-stretch rounded-full shrink-0" style={{ background: accent }} />
+          {body('#EDEDF0', '#D8D8DE')}
+        </motion.div>
+      );
+    }
+    if (tpl === 'neon') {
+      // Neon Glow: border glow warna platform, cyber
+      return (
+        <motion.div {...motionProps}
+          className="flex items-start gap-3 p-3"
+          style={{
+            background: `rgba(8,8,16,${Math.max(bg, 0.6)})`,
+            borderRadius: '10px',
+            border: `1px solid ${accent}`,
+            boxShadow: `0 0 12px ${accent}66, inset 0 0 8px ${accent}22`,
+          }}>
+          {currentSettings.showAvatar !== false && avatar('w-7 h-7', 'rounded-md')}
+          {body(accent, '#E8E8F5')}
+        </motion.div>
+      );
+    }
+    if (tpl === 'bubble') {
+      // Bubble: putih rounded, teks gelap, friendly
+      return (
+        <motion.div {...motionProps}
+          className="flex items-start gap-3 p-3 bg-white"
+          style={{ borderRadius: `${Math.max(currentSettings.messageRounding || 12, 16)}px`, boxShadow: '0 4px 16px rgba(0,0,0,0.25)' }}>
+          {currentSettings.showAvatar !== false && avatar('w-8 h-8', 'rounded-full')}
+          {body(accent, '#1a1a1a')}
+        </motion.div>
+      );
+    }
+    if (tpl === 'game') {
+      // Klasik Game: kotak tegas, border tebal, bold
+      return (
+        <motion.div {...motionProps}
+          className="flex items-start gap-3 p-2.5"
+          style={{
+            background: `rgba(20,16,10,${Math.max(bg, 0.7)})`,
+            borderRadius: '4px',
+            border: `2px solid ${accent}`,
+            borderLeft: `8px solid ${accent}`,
+          }}>
+          {currentSettings.showAvatar !== false && avatar('w-8 h-8', 'rounded-sm')}
+          {body('#FFE9B8', '#F5E9D0')}
+        </motion.div>
+      );
+    }
+    // indofinity (default): kartu oranye hangat ala IndoFinity
+    const isSpecial = msg.eventType && msg.eventType !== 'chat';
+    return (
+      <motion.div {...motionProps}
+        className="flex items-start gap-3 p-3"
+        style={{
+          background: isSpecial
+            ? `linear-gradient(to right, rgba(255,107,0,0.25), rgba(26,18,8,${bg}))`
+            : `rgba(26,18,8,${bg})`,
+          borderRadius: '14px',
+          borderLeft: `4px solid #FF6B00`,
+          boxShadow: isSpecial ? '0 0 18px rgba(255,107,0,0.35)' : '0 4px 20px rgba(0,0,0,0.4)',
+          backdropFilter: `blur(${currentSettings.messageBlur || 8}px)`,
+        }}>
+        {currentSettings.showAvatar !== false && avatar('w-7 h-7', 'rounded-lg')}
+        {body('#FFD166', '#F5EFE6')}
+      </motion.div>
+    );
+  };
+
   return (
     <div className="w-screen h-screen relative overflow-hidden">
       {settings.isLocked && <div className="absolute inset-0 z-50" />}
@@ -191,114 +323,7 @@ export function Overlay() {
       >
         <div className="w-[420px] max-h-[78vh] flex flex-col justify-end gap-2 overflow-hidden">
           <AnimatePresence initial={false} mode="popLayout">
-            {displayMessages.slice(-currentSettings.maxChats).map((msg) => {
-              const meta = getMeta(msg.platform);
-              return (
-                <motion.div
-                  key={msg.id}
-                  layout
-                  initial={{ opacity: 0, x: -30, scale: 0.95 }}
-                  animate={{ opacity: 1, x: 0, scale: 1 }}
-                  exit={{ opacity: 0, x: 30, scale: 0.95, transition: { duration: 0.25, ease: 'easeIn' } }}
-                  transition={{ type: 'spring', stiffness: 400, damping: 26, mass: 0.8 }}
-                  className={`flex items-start gap-3 rounded-xl p-3 shadow-[0_4px_20px_rgba(0,0,0,0.4)] border-l-[4px] ${
-                    msg.eventType === 'superchat' ? 'bg-gradient-to-r from-[rgba(255,200,0,0.2)] to-[rgba(12,12,16,0.65)]' :
-                    msg.eventType === 'gift' ? 'bg-gradient-to-r from-[rgba(255,0,150,0.2)] to-[rgba(12,12,16,0.65)]' :
-                    msg.eventType === 'cheers' ? 'bg-gradient-to-r from-[rgba(0,150,255,0.2)] to-[rgba(12,12,16,0.65)]' :
-                    'bg-[rgba(12,12,16,0.65)]'
-                  }`}
-                  style={{
-                    backdropFilter: `blur(${currentSettings.messageBlur || 8}px)`,
-                    WebkitBackdropFilter: `blur(${currentSettings.messageBlur || 8}px)`,
-                    borderLeftColor: msg.eventType === 'superchat' ? '#FFD700' :
-                      msg.eventType === 'gift' ? '#FF69B4' :
-                      msg.eventType === 'cheers' ? '#00BFFF' : meta.accentA,
-                    background: msg.eventType === 'superchat' ? `linear-gradient(to right, rgba(255,200,0,0.2), rgba(12,12,16,${(currentSettings.messageBgOpacity || 55)/100}))` :
-                      msg.eventType === 'gift' ? `linear-gradient(to right, rgba(255,0,150,0.2), rgba(12,12,16,${(currentSettings.messageBgOpacity || 55)/100}))` :
-                      msg.eventType === 'cheers' ? `linear-gradient(to right, rgba(0,150,255,0.2), rgba(12,12,16,${(currentSettings.messageBgOpacity || 55)/100}))` :
-                      `rgba(12,12,16,${(currentSettings.messageBgOpacity || 55)/100})`,
-                    borderRadius: `${currentSettings.messageRounding || 12}px`,
-                    boxShadow: msg.eventType && msg.eventType !== 'chat'
-                      ? `0 0 20px ${msg.eventType === 'superchat' ? 'rgba(255,215,0,0.3)' :
-                          msg.eventType === 'gift' ? 'rgba(255,105,180,0.3)' :
-                          'rgba(0,191,255,0.3)'}`
-                      : '0 4px 20px rgba(0,0,0,0.4)',
-                  }}
-                  >
-                  {currentSettings.showAvatar !== false && (
-                  <div className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold mt-0.5 overflow-hidden"
-                    style={msg.avatar ? {} : {
-                      background: `linear-gradient(135deg, ${meta.accentA}, ${meta.accentB})`,
-                      color: meta.darkText ? '#0c0c10' : '#fff',
-                    }}
-                  >
-                    {msg.avatar ? (
-                      <img src={msg.avatar} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      meta.icon
-                    )}
-                  </div>
-                  )}
-                  <div className="flex flex-col min-w-0 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      {currentSettings.showPlatformTag !== false && (
-                      <span
-                        className="text-[10px] font-bold tracking-[0.5px] uppercase px-1.5 py-0.5 rounded-md"
-                        style={{
-                          background: `linear-gradient(135deg, ${meta.accentA}, ${meta.accentB})`,
-                          color: meta.darkText ? '#0c0c10' : '#fff',
-                        }}
-                      >
-                        {meta.label}
-                      </span>
-                      )}
-                      {msg.eventType && msg.eventType !== 'chat' && (
-                        <span className={`text-[10px] font-bold tracking-[0.5px] uppercase px-1.5 py-0.5 rounded-md ${
-                          msg.eventType === 'superchat' ? 'bg-yellow-500/30 text-yellow-300' :
-                          msg.eventType === 'gift' ? 'bg-pink-500/30 text-pink-300' :
-                          msg.eventType === 'cheers' ? 'bg-blue-500/30 text-blue-300' :
-                          'bg-green-500/30 text-green-300'
-                        }`}>
-                          {msg.eventType === 'superchat' ? '⭐ Superchat' :
-                           msg.eventType === 'gift' && msg.extra?.eventName === 'member' ? '🎉 Member' :
-                           msg.eventType === 'gift' && msg.extra?.eventName === 'follow' ? '➕ Follow' :
-                           msg.eventType === 'gift' && msg.extra?.eventName === 'share' ? '🔄 Share' :
-                           msg.eventType === 'gift' && msg.extra?.eventName === 'like' ? '❤️ Like' :
-                           msg.eventType === 'gift' && msg.extra?.eventName === 'roomUser' ? '👋 Join' :
-                           msg.eventType === 'gift' ? '🎁 Gift' :
-                           msg.eventType === 'cheers' ? '🎉 Cheers' : '💎'}
-                        </span>
-                      )}
-                      <span className="text-sm font-bold text-[#F5F5F7] truncate max-w-[200px]">
-                        {msg.username}
-                      </span>
-                      {/* TikTok badges */}
-                      {msg.platform === 'tiktok' && msg.badges?.length > 0 && (
-                        <span className="text-[9px] font-bold px-1 py-0.5 rounded bg-white/10 text-gray-300 truncate max-w-[80px]">
-                          {msg.badges.slice(0, 2).join(', ')}
-                        </span>
-                      )}
-                      {msg.platform === 'tiktok' && msg.extra?.level > 0 && (
-                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-gradient-to-r from-[#FE2C55]/40 to-[#25F4EE]/40 text-white">
-                          Lv.{msg.extra!.level}
-                        </span>
-                      )}
-                    </div>
-                    <div style={{ fontSize: `${currentSettings.fontSize || 13.5}px` }} className="text-[#EDEDF0] leading-snug mt-1 break-words">
-                      {msg.message}
-                      {/* TikTok gift details */}
-                      {msg.platform === 'tiktok' && msg.extra?.giftName && (
-                        <span className="ml-1 text-pink-300 font-semibold">
-                          {msg.extra.giftCount > 1 && `${msg.extra.giftCount}x `}
-                          {msg.extra.giftName}
-                          {msg.extra.diamondCount > 0 && ` 💎${msg.extra.diamondCount}`}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
+            {displayMessages.slice(-currentSettings.maxChats).map(renderMessage)}
           </AnimatePresence>
         </div>
       </div>

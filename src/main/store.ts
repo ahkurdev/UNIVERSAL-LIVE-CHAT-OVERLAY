@@ -15,6 +15,7 @@ export const store = new Store<StoreSchema>({
       savedChannels: {},
   streamMode: false,
       isLocked: true,
+      overlayTemplate: 'indofinity',
       opacity: 100,
       scale: 1.0,
       maxChats: 8,

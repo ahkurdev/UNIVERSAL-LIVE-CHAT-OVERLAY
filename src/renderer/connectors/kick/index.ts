@@ -63,20 +63,21 @@ export class KickConnector implements ChatConnector {
   private async connectWebSocket(): Promise<void> {
     return new Promise((resolve, reject) => {
       try {
-        this.ws = new WebSocket(`wss://ws-us2.pusher.com/app/32cbd69e4b950bf97679?protocol=7&client=js&version=8.3.0&flash=false`);
-
-        this.ws.onopen = () => {
-          // Subscribe to the chatroom channel
-          this.ws?.send(JSON.stringify({
-            event: 'pusher:subscribe',
-            data: { channel: `chatrooms.${this.chatroomId}.v2` }
-          }));
-          resolve();
-        };
+        this.ws = new WebSocket(`wss://ws-us2.pusher.com/app/34bf7a0ff419a2a775b9?protocol=7&client=js&version=8.4.0&flash=false`);
 
         this.ws.onmessage = (event) => {
           try {
             const data = JSON.parse(event.data);
+            // Must wait for connection_established before subscribing —
+            // subscribing in onopen makes Pusher close the connection
+            if (data.event === 'pusher:connection_established') {
+              this.ws?.send(JSON.stringify({
+                event: 'pusher:subscribe',
+                data: { channel: `chatrooms.${this.chatroomId}.v2` }
+              }));
+              resolve();
+              return;
+            }
             if (data.event === 'App\\Events\\ChatMessageEvent' || data.event === 'App\\Events\\MessageCreated') {
               const payload = typeof data.data === 'string' ? JSON.parse(data.data) : data.data;
               const msg = this.parseMessage(payload);

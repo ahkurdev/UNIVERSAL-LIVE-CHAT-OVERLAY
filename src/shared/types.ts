@@ -26,6 +26,8 @@ export interface ChatConnector {
 
 export type ConnectionStatus = 'idle' | 'connecting' | 'connected' | 'error';
 
+export type OverlayTemplate = 'indofinity' | 'minimal' | 'neon' | 'bubble' | 'game';
+
 export interface AppSettings {
   // General
   language: string;
@@ -36,6 +38,7 @@ export interface AppSettings {
   
   // Overlay
   isLocked: boolean;
+  overlayTemplate: OverlayTemplate;
   opacity: number;
   scale: number;
   maxChats: number;

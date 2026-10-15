@@ -37,6 +37,7 @@ const store = new ElectronStore({
       savedChannels: {},
   streamMode: false,
       isLocked: false,
+      overlayTemplate: 'indofinity',
       opacity: 100,
       scale: 1.0,
       maxChats: 8,
@@ -146,8 +147,8 @@ function createOverlayWindow(): void {
 
   overlayWindow.on('ready-to-show', () => {
     overlayWindow?.show();
-    // Initial state: ignore mouse events if locked
-    overlayWindow?.setIgnoreMouseEvents(storedSettings.isLocked, { forward: true });
+    // Initial state: fully click-through when locked
+    overlayWindow?.setIgnoreMouseEvents(storedSettings.isLocked, storedSettings.isLocked ? {} : { forward: true });
   });
 
   // Handle window move/resize events to save bounds
@@ -245,9 +246,11 @@ ipcMain.on('store-set', (_event, key, value) => {
   overlayWindow?.webContents.send('store-on-change', key, value);
 });
 
-// IPC to set ignore mouse events for overlay window
+// IPC to set ignore mouse events for overlay window.
+// When ignored, forward:false so ALL clicks pass through to apps behind
+// (forward:true still captures clicks on rendered content like messages).
 ipcMain.on('set-ignore-mouse-events', (_event, ignore: boolean) => {
-  overlayWindow?.setIgnoreMouseEvents(ignore, { forward: true });
+  overlayWindow?.setIgnoreMouseEvents(ignore, ignore ? {} : { forward: true });
 });
 
 // IPC to send chat messages to overlay
@@ -261,7 +264,7 @@ ipcMain.on('messages-update', (_event, messages: ChatMessage[]) => {
 // IPC to send settings update to overlay
 ipcMain.on('send-settings-update', (_event, settings: AppSettings) => {
   // Update overlay window mouse events based on new lock setting
-  overlayWindow?.setIgnoreMouseEvents(settings.isLocked, { forward: true });
+  overlayWindow?.setIgnoreMouseEvents(settings.isLocked, settings.isLocked ? {} : { forward: true });
   overlayWindow?.webContents.send('settings-update', settings);
 });
 

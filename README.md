@@ -1,6 +1,8 @@
+Bahasa Indonesia version: [readme.id.md](readme.id.md)
+
 # Universal Live Chat Overlay
 
-Overlay chat multi-platform buat streamer. Gabungin chat **Twitch, YouTube, TikTok, Kick** dalam satu overlay transparan di atas game.
+Multi-platform chat overlay for streamers. Combines **Twitch, YouTube, TikTok, and Kick** chat into a single transparent overlay on top of your game.
 
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Windows-blue)
@@ -8,33 +10,31 @@ Overlay chat multi-platform buat streamer. Gabungin chat **Twitch, YouTube, TikT
 
 ---
 
-## Cara Install (Windows)
+## Installation (Windows)
 
-> **Persyaratan:** Koneksi internet (download ~200MB untuk dependencies)
+> **Requirements:** Internet connection (downloads ~200MB of dependencies)
 
 ### 1. Download Node.js
-Download dan install **Node.js LTS** dari: https://nodejs.org
+Download and install **Node.js LTS** from: https://nodejs.org
 
-Cek berhasil:
+Check it worked:
 ```
-node --version   # gunakan Node.js LTS 22.12 atau lebih baru
+node --version   # use Node.js LTS 22.12 or newer
 ```
 
-### 2. Download Aplikasi
-Download repository ini sebagai ZIP atau clone:
+### 2. Download the App
+Download this repository as a ZIP or clone it:
 ```
 git clone https://github.com/ahkurdev/UNIVERSAL-LIVE-CHAT-OVERLAY.git
 ```
-Atau klik **Code → Download ZIP**, extract.
+Or click **Code → Download ZIP**, then extract it.
 
-### 3. Setup (sekali doang)
-Klik 2x file **`setup.bat`** — nanti otomatis install semua yang dibutuhkan.
+### 3. Setup (one time only)
+Double-click **`setup.bat`** — it will automatically install everything needed.
 
-`setup.bat` juga memeriksa apakah `electron.exe` benar-benar selesai didownload. Jika
-instalasi Electron tidak lengkap, setup akan memperbaikinya sebelum menampilkan pesan
-berhasil.
+`setup.bat` also checks whether `electron.exe` actually finished downloading. If the Electron installation is incomplete, setup will fix it before showing the success message.
 
-Atau manual:
+Or manually:
 ```
 cd UNIVERSAL-LIVE-CHAT-OVERLAY
 npm install
@@ -42,82 +42,79 @@ node -e "require('electron')"
 npm run verify:electron
 ```
 
-### 4. Jalankan (Mode Pengembangan)
-Klik 2x file **`start.bat`**
+### 4. Run (Development Mode)
+Double-click **`start.bat`**
 
-Atau:
+Or:
 ```
 npm start
 ```
 
-### 5. Build Jadi Aplikasi Mandiri (.exe)
-Klik 2x file **`build-exe.bat`**
+### 5. Build a Standalone App (.exe)
+Double-click **`build-exe.bat`**
 
-Atau:
+Or:
 ```
 npm run dist
 ```
-File installer (`Setup 1.0.0.exe`) dan file portabel (`Portable-1.0.0.exe`) akan langsung tercipta di folder **`dist/`**.
+The installer file (`Setup 1.0.0.exe`) and the portable file (`Portable-1.0.0.exe`) will be created directly in the **`dist/`** folder.
 
-`start.bat` menjalankan pemeriksaan yang sama dan mencoba memulihkan binary Electron
-secara otomatis. Jadi error `Electron uninstall` tidak dibiarkan muncul tanpa penjelasan.
+`start.bat` runs the same check and tries to restore the Electron binary automatically. So an `Electron uninstall` error is never left to appear without an explanation.
 
-### Troubleshooting Instalasi
+### Installation Troubleshooting
 
-Jika setup gagal mendownload Electron:
+If setup fails to download Electron:
 
-1. Pastikan koneksi internet aktif dan GitHub/download Electron tidak diblokir antivirus,
-   firewall, VPN, atau proxy.
-2. Jalankan `setup.bat` lagi. Script aman dijalankan ulang.
-3. Jika masih gagal, hapus folder `node_modules` secara manual lalu jalankan `setup.bat`.
+1. Make sure your internet connection is active and that GitHub / Electron downloads are not blocked by antivirus, firewall, VPN, or proxy.
+2. Run `setup.bat` again. The script is safe to run repeatedly.
+3. If it still fails, delete the `node_modules` folder manually, then run `setup.bat`.
 
-Jangan gunakan `npm install --ignore-scripts`, karena project membutuhkan install script
-untuk menyiapkan dependency build seperti esbuild.
+Do not use `npm install --ignore-scripts`, because the project needs its install scripts to prepare build dependencies such as esbuild.
 
 ---
 
-## Cara Pakai
+## How to Use
 
-1. **Dashboard** muncul setelah aplikasi jalan
-2. Masukin nama channel / URL di kolom input
-3. Klik **Connect** di platform yang mau dipake:
-   - **Mock** — test data (tanpa login)
-   - **Twitch** — nama channel
-   - **YouTube** — URL full / channel name / video ID (mode scrape tanpa API key!)
+1. The **Dashboard** appears after the app starts
+2. Enter the channel name / URL in the input field
+3. Click **Connect** on the platform you want to use:
+   - **Mock** — test data (no login)
+   - **Twitch** — channel name
+   - **YouTube** — full URL / channel name / video ID (scrape mode, no API key!)
    - **TikTok** — @username
    - **Kick** — channel slug
-4. Chat muncul di **overlay transparan** di atas game
-5. Atur posisi overlay lewat **Lock Position** di dashboard
+4. Chat appears in the **transparent overlay** on top of your game
+5. Adjust the overlay position via **Lock Position** in the dashboard
 
 ---
 
-## Fitur
+## Features
 
 ### Overlay
-- Overlay transparan, always on top
-- Drag & resize langsung di overlay (Unlock dulu)
-- Glassmorphism UI dengan backdrop blur
+- Transparent overlay, always on top
+- Drag & resize directly on the overlay (Unlock it first)
+- Glassmorphism UI with backdrop blur
 - Framer Motion animations (slide + fade)
 - Platform colors (TikTok pink, YouTube red, Twitch purple, Kick green)
 - TikTok badges, level, gift info, diamonds
-- Auto-fade chat (default 12 detik)
-- Special events stay 3x lebih lama (superchat/gift/cheers)
+- Auto-fade chat (default 12 seconds)
+- Special events stay 3x longer (superchat/gift/cheers)
 - **F9 Stream Mode** — toggle hide/show overlay
 
 ### 5 Platform Connectors
 - **Twitch** — tmi.js IRC (read-only, no OAuth)
-- **YouTube** — dual mode: scrape (no API key) atau YouTube Data API v3
+- **YouTube** — dual mode: scrape (no API key) or YouTube Data API v3
 - **TikTok** — tiktok-live-connector (main process, 54+ events)
 - **Kick** — Pusher WebSocket
-- **Mock** — test data untuk development
+- **Mock** — test data for development
 
 ### Dashboard
-- Chat log dengan auto-scroll & clear
+- Chat log with auto-scroll & clear
 - Connection status indicators
 - Channel name persistence (auto-save)
 - Settings, Statistics, OBS Browser Source navigation
 
-### Settings (6 kategori)
+### Settings (6 categories)
 - **General** — language, stream mode, YouTube mode, OBS server
 - **Overlay** — lock, opacity, scale, chat width, alignment, fade duration
 - **Appearance** — bg opacity, blur, rounding, font size, show/hide badges
@@ -134,10 +131,10 @@ untuk menyiapkan dependency build seperti esbuild.
 - Export CSV / JSON
 
 ### OBS Browser Source
-- Local web server di `http://localhost:3000` (port configurable)
+- Local web server at `http://localhost:3000` (port configurable)
 - WebSocket real-time chat updates
 - Self-contained HTML (inline CSS + JS)
-- Toggle on/off di Settings
+- Toggle on/off in Settings
 
 ### Chat Filters
 - Duplicate filter (configurable window)
@@ -145,7 +142,7 @@ untuk menyiapkan dependency build seperti esbuild.
 - Blacklist words (comma-separated)
 - Hide links
 - Hide ALL CAPS messages
-- Hide bots (Nightbot, Streamlabs, Moobot, dll)
+- Hide bots (Nightbot, Streamlabs, Moobot, etc.)
 
 ---
 
@@ -169,7 +166,7 @@ untuk menyiapkan dependency build seperti esbuild.
 
 ---
 
-## Struktur Project
+## Project Structure
 
 ```
 src/
